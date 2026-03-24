@@ -62,28 +62,28 @@ Entregar a nova estrutura visual (`Module`, `Dependencies`, `Description`) mante
 
 #### Changes
 
-- [ ] Editar `src/main/java/com/seed4j/cli/command/infrastructure/primary/ListModulesCommand.java` para:
-- [ ] Imprimir cabeçalho de 3 colunas.
-- [ ] Exibir `Dependencies` como `-` por padrão (ainda sem materializar tokens reais).
-- [ ] Preservar ordenação por slug.
+- [x] Editar `src/main/java/com/seed4j/cli/command/infrastructure/primary/ListModulesCommand.java` para:
+- [x] Imprimir cabeçalho de 3 colunas.
+- [x] Exibir `Dependencies` como `-` por padrão (ainda sem materializar tokens reais).
+- [x] Preservar ordenação por slug.
 - [ ] Atualizar `spec().usageMessage().description(...)` do comando `list` para mencionar dependências.
-- [ ] Introduzir tipos dedicados para formatação (TDD de tipos), por exemplo:
-- [ ] `ListModuleRow` (slug, dependenciesText, description).
-- [ ] `ListColumnsLayout` (larguras e padding).
-- [ ] Criar teste focado no novo layout base em `src/test/java/com/seed4j/cli/command/infrastructure/primary/Seed4JCommandsFactoryTest.java`.
+- [x] Introduzir tipos dedicados para formatação (TDD de tipos), por exemplo:
+- [x] `ListModuleRow` (slug, dependenciesText, description).
+- [x] `ListColumnsLayout` (larguras e padding).
+- [x] Criar teste focado no novo layout base em `src/test/java/com/seed4j/cli/command/infrastructure/primary/Seed4JCommandsFactoryTest.java`.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=Seed4JCommandsFactoryTest test`
+- [x] Command: `./mvnw -Dtest=Seed4JCommandsFactoryTest test`
 - [ ] Expected result: teste de `list` valida presença do cabeçalho, coluna `Dependencies` com `-` e descrição do comando atualizada no help.
 - [ ] Command: `./mvnw test`
 - [ ] Expected result: suíte unit/integration local passa sem regressão.
 
 #### Acceptance Criteria
 
-- [ ] Saída do `list` contém 3 colunas visíveis.
-- [ ] Módulos sem dependência exibem `-`.
-- [ ] Ordem alfabética de módulos é mantida.
+- [x] Saída do `list` contém 3 colunas visíveis.
+- [x] Módulos sem dependência exibem `-`.
+- [x] Ordem alfabética de módulos é mantida.
 - [ ] Descrição do comando `list` deixa explícito que também lista dependências.
 
 ### Milestone 2 - VS2: Dependências tipadas reais a partir de `resources()`
@@ -94,26 +94,26 @@ Substituir fallback por dependências reais tipadas (`module:`/`feature:`), sem 
 
 #### Changes
 
-- [ ] Em `ListModulesCommand`, mapear dependências de `moduleResource.organization().dependencies()`.
-- [ ] Gerar token por item:
-- [ ] `module:<slug>` quando tipo for `MODULE`.
-- [ ] `feature:<slug>` quando tipo for `FEATURE`.
-- [ ] Manter ordem original das dependências retornadas pelo catálogo.
-- [ ] Concatenar múltiplas dependências com `, `.
+- [x] Em `ListModulesCommand`, mapear dependências de `moduleResource.organization().dependencies()`.
+- [x] Gerar token por item:
+- [x] `module:<slug>` quando tipo for `MODULE`.
+- [x] `feature:<slug>` quando tipo for `FEATURE`.
+- [x] Manter ordem original das dependências retornadas pelo catálogo.
+- [x] Concatenar múltiplas dependências com `, `.
 - [ ] Cobrir cenários com múltiplas dependências em teste de comando.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=Seed4JCommandsFactoryTest test`
+- [x] Command: `./mvnw -Dtest=Seed4JCommandsFactoryTest test`
 - [ ] Expected result: teste valida tokens tipados e separação por vírgula.
 - [ ] Command: `./mvnw test`
 - [ ] Expected result: sem regressão em `apply` e demais comandos.
 
 #### Acceptance Criteria
 
-- [ ] Dependências aparecem tipadas (`module:`/`feature:`).
-- [ ] Múltiplas dependências usam `, `.
-- [ ] Fonte de dados permanece `modules.resources()`.
+- [x] Dependências aparecem tipadas (`module:`/`feature:`).
+- [x] Múltiplas dependências usam `, `.
+- [x] Fonte de dados permanece `modules.resources()`.
 
 ### Milestone 3 - VS3: Hidden marker + largura máxima e wrap determinístico
 
@@ -123,7 +123,7 @@ Entregar legibilidade robusta em terminal para linhas longas e visibilidade de d
 
 #### Changes
 
-- [ ] Implementar regra de hidden marker no token apenas para dependências do tipo `MODULE`: `... (hidden)` quando slug da dependência não estiver entre slugs visíveis do próprio `resources()`.
+- [x] Implementar regra de hidden marker no token apenas para dependências do tipo `MODULE`: `... (hidden)` quando slug da dependência não estiver entre slugs visíveis do próprio `resources()`.
 - [ ] Implementar layout da coluna `Dependencies`:
 - [ ] largura natural = maior entre cabeçalho e maior célula de dependências.
 - [ ] largura efetiva = `min(larguraNatural, 60)`.
@@ -131,7 +131,7 @@ Entregar legibilidade robusta em terminal para linhas longas e visibilidade de d
 - [ ] linhas de continuação sem repetir `Module` e `Description`.
 - [ ] Adicionar testes para:
 - [ ] linha com dependências longas (wrap).
-- [ ] presença de ` (hidden)` para dependência de `MODULE` oculto, sem marcar dependências de `FEATURE`.
+- [x] presença de ` (hidden)` para dependência de `MODULE` oculto, sem marcar dependências de `FEATURE`.
 
 #### Validation
 
@@ -144,7 +144,7 @@ Entregar legibilidade robusta em terminal para linhas longas e visibilidade de d
 
 - [ ] Não há truncamento de dependências.
 - [ ] Wrap é determinístico.
-- [ ] Dependência oculta de `MODULE` recebe sufixo ` (hidden)`.
+- [x] Dependência oculta de `MODULE` recebe sufixo ` (hidden)`.
 
 ### Milestone 4 - VS4: Compatibilidade extension mode + documentação + validação final
 
@@ -187,11 +187,11 @@ Cada slice gera comportamento observável no terminal e cobertura de teste antes
 
 ## Progress
 
-- [ ] Milestone 1 started
+- [x] Milestone 1 started
 - [ ] Milestone 1 completed
-- [ ] Milestone 2 started
+- [x] Milestone 2 started
 - [ ] Milestone 2 completed
-- [ ] Milestone 3 started
+- [x] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
@@ -210,6 +210,14 @@ Cada slice gera comportamento observável no terminal e cobertura de teste antes
   Rationale: mantém legibilidade em terminal sem perder informação.
   Date/Author: 2026-03-23 / Codex
 
+- Decision: Hidden marker será decidido pelo conjunto visível de slugs de `modules.resources().stream()`.
+  Rationale: mantém o critério alinhado ao catálogo efetivamente exibido no `list`, sem consultar fonte paralela.
+  Date/Author: 2026-03-24 / Codex
+
+- Decision: Validar hidden marker com catálogo sintético em teste unitário dedicado do comando.
+  Rationale: no cenário de hidden resources do core, dependências aninhadas podem ser removidas, o que torna o caso ` (hidden)` pouco confiável em teste de integração de config externa.
+  Date/Author: 2026-03-24 / Codex
+
 ## Risks and Mitigations
 
 - Risk: Regressão no parser de testes de saída em JAR empacotado.
@@ -223,6 +231,9 @@ Cada slice gera comportamento observável no terminal e cobertura de teste antes
 
 - Risk: Misturar FEATURE/MODULE e perder semântica.
   Mitigation: mapear tokens por tipo de dependência com teste dedicado para cada tipo.
+
+- Risk: Ficar sem cobertura robusta para múltiplas dependências separadas por vírgula.
+  Mitigation: adicionar teste explícito para linha com múltiplos tokens em ordem no próximo ciclo de VS2/VS3.
 
 ## Validation Strategy
 
@@ -247,4 +258,5 @@ Recovery:
 
 ## Lessons Learned
 
-- [ ] Preencher durante execução com descobertas reais (ex.: particularidades de dependências hidden por tag/slug no core).
+- [x] Em `Seed4JModulesResources`, slugs ocultos podem ocultar também dependências aninhadas; isso reduz a chance de observar ` (hidden)` com configuração externa real.
+- [x] Para hidden marker e edge-cases de layout, teste unitário do `ListModulesCommand` com catálogo sintético traz previsibilidade sem depender do catálogo default/extensão.
