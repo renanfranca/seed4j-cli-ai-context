@@ -14,6 +14,7 @@ Escopo:
 - Construir dependências a partir de `modules.resources()`.
 - Exibir dependências tipadas com marcador `(hidden)` quando o alvo de dependência de módulo estiver oculto.
 - Definir largura/wrap determinísticos para terminal (sem truncar conteúdo).
+- Atualizar a descrição do comando `list` para explicitar que a saída inclui dependências dos módulos.
 - Atualizar testes e documentação de comandos.
 
 Fora de escopo:
@@ -48,6 +49,7 @@ Fora de escopo:
 - Coluna `Dependencies` usa largura efetiva `min(maxNaturalWidth, 60)` e quebra de linha sem truncamento.
 - Ordenação alfabética de módulos permanece.
 - `extension mode` continua aditivo e sem duplicidade de slugs.
+- Ajuda do CLI reflete descrição do comando `list` mencionando módulos e dependências.
 - Documentação oficial reflete o novo formato.
 
 ## Milestones
@@ -64,6 +66,7 @@ Entregar a nova estrutura visual (`Module`, `Dependencies`, `Description`) mante
 - [ ] Imprimir cabeçalho de 3 colunas.
 - [ ] Exibir `Dependencies` como `-` por padrão (ainda sem materializar tokens reais).
 - [ ] Preservar ordenação por slug.
+- [ ] Atualizar `spec().usageMessage().description(...)` do comando `list` para mencionar dependências.
 - [ ] Introduzir tipos dedicados para formatação (TDD de tipos), por exemplo:
 - [ ] `ListModuleRow` (slug, dependenciesText, description).
 - [ ] `ListColumnsLayout` (larguras e padding).
@@ -72,7 +75,7 @@ Entregar a nova estrutura visual (`Module`, `Dependencies`, `Description`) mante
 #### Validation
 
 - [ ] Command: `./mvnw -Dtest=Seed4JCommandsFactoryTest test`
-- [ ] Expected result: teste de `list` valida presença do cabeçalho e coluna `Dependencies` com `-`.
+- [ ] Expected result: teste de `list` valida presença do cabeçalho, coluna `Dependencies` com `-` e descrição do comando atualizada no help.
 - [ ] Command: `./mvnw test`
 - [ ] Expected result: suíte unit/integration local passa sem regressão.
 
@@ -81,6 +84,7 @@ Entregar a nova estrutura visual (`Module`, `Dependencies`, `Description`) mante
 - [ ] Saída do `list` contém 3 colunas visíveis.
 - [ ] Módulos sem dependência exibem `-`.
 - [ ] Ordem alfabética de módulos é mantida.
+- [ ] Descrição do comando `list` deixa explícito que também lista dependências.
 
 ### Milestone 2 - VS2: Dependências tipadas reais a partir de `resources()`
 
