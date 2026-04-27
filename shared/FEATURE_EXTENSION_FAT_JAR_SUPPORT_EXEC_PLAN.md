@@ -109,16 +109,19 @@ Evitar comportamento silencioso quando o jar nao atende contrato de fat jar.
 
 #### Goal
 
-Garantir cobertura de comportamento real em `-jar` com runtime extension.
+Garantir cobertura de comportamento real em `-jar` com runtime extension e fechar regressao aberta pelo fail-fast do milestone 2 nos testes de fixture/runtime in-process.
 
 #### Changes
 
 - [ ] Atualizar `ExtensionRuntimeFixture` para gerar fixture de extensao no layout fat jar (incluindo classes de extensao em `BOOT-INF/classes` e, quando necessario, libs em `BOOT-INF/lib`).
 - [ ] Ajustar testes empacotados de `list` e `--version` para usar fixture fat jar.
 - [ ] Adicionar cenario negativo empacotado para jar flat/invalido em extension mode (falha esperada).
+- [ ] Ajustar `ExtensionRuntimeFixtureTest` e `ExtensionRuntimeBootstrapInProcessTest` para usar fixture fat jar e voltar o `clean verify` para verde apos a validacao de layout.
 
 #### Validation
 
+- [ ] Command: `./mvnw -Dtest=ExtensionRuntimeFixtureTest,ExtensionRuntimeBootstrapInProcessTest test`
+- [ ] Expected result: testes de fixture e runtime in-process passam com fat jar valido e falham de forma controlada no cenario invalido.
 - [ ] Command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
 - [ ] Expected result: cenarios positivos passam com fat jar; cenario negativo falha conforme contrato.
 
@@ -178,8 +181,8 @@ Fechar com contrato documentado e trilha de verificacao completa.
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
@@ -203,6 +206,10 @@ Fechar com contrato documentado e trilha de verificacao completa.
 
 - Decision: o CLI deve impor baseline de logging no child process em `extension mode`, independentemente dos overrides da extensao.
   Rationale: preservar UX dos comandos e evitar ruido operacional apos habilitar classpath fat jar.
+  Date/Author: 2026-04-27 / User + Codex
+
+- Decision: erros de `InvalidRuntimeConfigurationException` no bootstrap devem ser propagados ao usuario via `stderr` antes do exit code 1.
+  Rationale: sem mensagem explicita, o fail-fast perde utilidade operacional e dificulta diagnostico.
   Date/Author: 2026-04-27 / User + Codex
 
 ## Risks and Mitigations
@@ -252,3 +259,6 @@ Recovery:
 ## Lessons Learned
 
 - Preencher durante a execucao com descobertas nao obvias sobre `PropertiesLauncher`, URIs `jar:file:` e comportamento de classpath em runtime extension.
+- Validar layout fat jar por existencia de entradas `BOOT-INF/classes` no proprio `extension.jar` evita falso positivo de artefato presente mas inutil em runtime.
+- O fail-fast de runtime precisa de mensagem em `stderr`; apenas retornar exit code nao-zero nao entrega diagnostico suficiente ao usuario.
+- A validacao de layout no milestone 2 quebra fixtures legados que ainda geram jar flat (`ExtensionRuntimeFixtureTest`); ajuste de fixtures/testes empacotados permanece responsabilidade do milestone 3.
