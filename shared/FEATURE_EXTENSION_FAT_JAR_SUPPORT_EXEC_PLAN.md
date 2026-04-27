@@ -113,22 +113,22 @@ Garantir cobertura de comportamento real em `-jar` com runtime extension e fecha
 
 #### Changes
 
-- [ ] Atualizar `ExtensionRuntimeFixture` para gerar fixture de extensao no layout fat jar (incluindo classes de extensao em `BOOT-INF/classes` e, quando necessario, libs em `BOOT-INF/lib`).
-- [ ] Ajustar testes empacotados de `list` e `--version` para usar fixture fat jar.
-- [ ] Adicionar cenario negativo empacotado para jar flat/invalido em extension mode (falha esperada).
-- [ ] Ajustar `ExtensionRuntimeFixtureTest` e `ExtensionRuntimeBootstrapInProcessTest` para usar fixture fat jar e voltar o `clean verify` para verde apos a validacao de layout.
+- [x] Atualizar `ExtensionRuntimeFixture` para gerar fixture de extensao no layout fat jar (incluindo classes de extensao em `BOOT-INF/classes` e, quando necessario, libs em `BOOT-INF/lib`).
+- [x] Ajustar testes empacotados de `list` e `--version` para usar fixture fat jar.
+- [x] Adicionar cenario negativo empacotado para jar flat/invalido em extension mode (falha esperada).
+- [x] Ajustar `ExtensionRuntimeFixtureTest` e `ExtensionRuntimeBootstrapInProcessTest` para usar fixture fat jar e voltar o `clean verify` para verde apos a validacao de layout.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=ExtensionRuntimeFixtureTest,ExtensionRuntimeBootstrapInProcessTest test`
-- [ ] Expected result: testes de fixture e runtime in-process passam com fat jar valido e falham de forma controlada no cenario invalido.
-- [ ] Command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
-- [ ] Expected result: cenarios positivos passam com fat jar; cenario negativo falha conforme contrato.
+- [x] Command: `./mvnw -Dtest=ExtensionRuntimeFixtureTest,ExtensionRuntimeBootstrapInProcessTest test`
+- [x] Expected result: testes de fixture e runtime in-process passam com fat jar valido e falham de forma controlada no cenario invalido.
+- [x] Command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
+- [x] Expected result: cenarios positivos passam com fat jar; cenario negativo falha conforme contrato.
 
 #### Acceptance Criteria
 
-- [ ] Em extension mode com fat jar valido, modulo extension-only aparece no `seed4j list`.
-- [ ] Em extension mode com jar sem layout fat jar, bootstrap falha cedo.
+- [x] Em extension mode com fat jar valido, modulo extension-only aparece no `seed4j list`.
+- [x] Em extension mode com jar sem layout fat jar, bootstrap falha cedo.
 
 ### Milestone 4 - Blindagem de logging do CLI contra overrides da extensao
 
@@ -183,8 +183,8 @@ Fechar com contrato documentado e trilha de verificacao completa.
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
 - [ ] Milestone 5 started
@@ -257,6 +257,8 @@ Recovery:
 3. Se necessario, abrir hotfix com mensagem temporaria de contingencia no runtime.
 
 ## Lessons Learned
+
+- Os testes empacotados (`failsafe`) dependem de um artefato CLI jar existente em `target/`; para evitar falso-negativo de ambiente, executar `./mvnw -DskipTests package` antes da rodada de IT quando o jar nao estiver presente.
 
 - Preencher durante a execucao com descobertas nao obvias sobre `PropertiesLauncher`, URIs `jar:file:` e comportamento de classpath em runtime extension.
 - Validar layout fat jar por existencia de entradas `BOOT-INF/classes` no proprio `extension.jar` evita falso positivo de artefato presente mas inutil em runtime.
