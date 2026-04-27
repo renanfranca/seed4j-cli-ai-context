@@ -138,20 +138,20 @@ Garantir saida operacional limpa do CLI em `extension mode`, mesmo quando a exte
 
 #### Changes
 
-- [ ] Definir contrato de logging do child process em `extension mode` (sem logs de startup/info por padrao).
-- [ ] Atualizar bootstrap para aplicar baseline de logging com precedencia sobre `logging.*` e `logback-spring.xml` da extensao.
-- [ ] Garantir que overrides da extensao nao alterem a observabilidade padrao do CLI em `seed4j list` e `seed4j --version`.
-- [ ] Cobrir com testes o cenario onde `extension.jar` contem `config/application.yml` e `logback-spring.xml`.
+- [x] Definir contrato de logging do child process em `extension mode` (sem logs de startup/info por padrao).
+- [x] Atualizar bootstrap para aplicar baseline de logging com precedencia sobre `logging.*` e `logback-spring.xml` da extensao.
+- [x] Garantir que overrides da extensao nao alterem a observabilidade padrao do CLI em `seed4j list` e `seed4j --version`.
+- [x] Cobrir com testes o cenario onde `extension.jar` contem `config/application.yml` e `logback-spring.xml`.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapInProcessTest,Seed4JCliLauncherTest test`
-- [ ] Expected result: comandos em `extension mode` nao exibem logs de startup/info nem warnings de configuracao de logback.
+- [x] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapInProcessTest,Seed4JCliLauncherTest test`
+- [x] Expected result: comandos em `extension mode` nao exibem logs de startup/info nem warnings de configuracao de logback.
 
 #### Acceptance Criteria
 
-- [ ] Em `extension mode`, a saida dos comandos permanece focada em resultado funcional (sem ruido de bootstrap/logback por padrao).
-- [ ] O comportamento e resiliente mesmo quando a extensao publica overrides de `logging.*`.
+- [x] Em `extension mode`, a saida dos comandos permanece focada em resultado funcional (sem ruido de bootstrap/logback por padrao).
+- [x] O comportamento e resiliente mesmo quando a extensao publica overrides de `logging.*`.
 
 ### Milestone 5 - Documentacao e validacao completa
 
@@ -185,8 +185,8 @@ Fechar com contrato documentado e trilha de verificacao completa.
 - [x] Milestone 2 completed
 - [x] Milestone 3 started
 - [x] Milestone 3 completed
-- [ ] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 4 started
+- [x] Milestone 4 completed
 - [ ] Milestone 5 started
 - [ ] Milestone 5 completed
 
@@ -229,6 +229,9 @@ Fechar com contrato documentado e trilha de verificacao completa.
 - Risk: Blindagem de logging esconder sinais uteis para diagnostico.
   Mitigation: limitar supressao ao bootstrap padrao e manter logs de erro/falha de runtime.
 
+- Risk: `logging.config` apontar para localizacao invalida em ambiente de teste/in-process e quebrar bootstrap.
+  Mitigation: usar recurso estavel de classpath (`classpath:logback-spring.xml`) em vez de URL `jar:file:...` do executavel.
+
 ## Validation Strategy
 
 1. Rodar testes unitarios de bootstrap e montagem de comando para validar `loader.path`.
@@ -257,6 +260,9 @@ Recovery:
 3. Se necessario, abrir hotfix com mensagem temporaria de contingencia no runtime.
 
 ## Lessons Learned
+
+- A baseline de logging em `extension mode` precisa ser configurada por system properties no launcher, nao por suposicao de ordem de classpath da extensao.
+- Para manter paridade entre caminho empacotado e testes in-process, `logging.config` deve referenciar recurso de classpath do CLI em vez de caminho interno do jar executavel.
 
 - Os testes empacotados (`failsafe`) dependem de um artefato CLI jar existente em `target/`; para evitar falso-negativo de ambiente, executar `./mvnw -DskipTests package` antes da rodada de IT quando o jar nao estiver presente.
 
