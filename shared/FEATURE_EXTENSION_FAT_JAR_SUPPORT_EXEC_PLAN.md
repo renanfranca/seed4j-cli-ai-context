@@ -14,6 +14,7 @@ Escopo:
 - Ajustar bootstrap de child process para montar `loader.path` compativel com Spring Boot fat jar.
 - Validar layout do `extension.jar` antes de montar o child process e falhar rapido em caso de inconsistencias.
 - Atualizar fixtures e testes para validar o caminho real (`-jar` + `PropertiesLauncher`) com extensao em fat jar.
+- Blindar o logging do child process para evitar ruido quando a extensao inclui `config/application.yml` e `logback-spring.xml`.
 - Atualizar documentacao operacional do runtime extension.
 
 Fora de escopo:
@@ -44,6 +45,7 @@ Fora de escopo:
   - `src/test/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherTest.java`
 - O guia de comandos documenta extension mode e metadata, mas ainda nao explicita contrato de fat jar:
   - `documentation/Commands.md`
+- Algumas extensoes empacotam `config/application.yml` e `logback-spring.xml`; com `loader.path` em `BOOT-INF/classes`, esses arquivos podem sobrescrever niveis de log e nome da aplicacao do CLI.
 
 ## Desired End State
 
@@ -53,6 +55,7 @@ Fora de escopo:
   - `jar:file:<extension.jar>!/BOOT-INF/lib` (ou equivalente com sufixo `/`)
 - Se o `extension.jar` nao tiver `BOOT-INF/classes`, o CLI encerra com erro de runtime configuracao invalida e mensagem objetiva.
 - Extensao em jar flat deixa de ser suportada por decisao de produto.
+- Em `extension mode`, `seed4j list` e `seed4j --version` nao exibem logs de startup/warnings de logback por override de logging da extensao.
 - Testes de unidade e integracao cobrem fluxo positivo (fat jar valido) e negativo (jar flat/invalido).
 
 ## Milestones
@@ -65,20 +68,20 @@ Definir e implementar a regra central de `loader.path` para extensao fat jar.
 
 #### Changes
 
-- [ ] Introduzir componente de dominio no bootstrap para resolver `loader.path` de extensao (exemplo: `RuntimeExtensionLoaderPathResolver`) com foco em fat jar.
-- [ ] Atualizar `Seed4JCliLauncher` para usar o resolvedor ao montar `JavaChildProcessRequest`.
-- [ ] Garantir que o `loader.path` final use entradas `jar:file:...!/BOOT-INF/classes` e `jar:file:...!/BOOT-INF/lib`.
-- [ ] Manter `seed4j.cli.runtime.*` inalterado para nao quebrar leitura de runtime selection.
+- [x] Introduzir componente de dominio no bootstrap para resolver `loader.path` de extensao (exemplo: `RuntimeExtensionLoaderPathResolver`) com foco em fat jar.
+- [x] Atualizar `Seed4JCliLauncher` para usar o resolvedor ao montar `JavaChildProcessRequest`.
+- [x] Garantir que o `loader.path` final use entradas `jar:file:...!/BOOT-INF/classes` e `jar:file:...!/BOOT-INF/lib`.
+- [x] Manter `seed4j.cli.runtime.*` inalterado para nao quebrar leitura de runtime selection.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=Seed4JCliLauncherTest,JavaProcessChildLauncherTest test`
-- [ ] Expected result: testes passam e verificam que `loader.path` foi montado no formato fat jar.
+- [x] Command: `./mvnw -Dtest=Seed4JCliLauncherTest,JavaProcessChildLauncherTest test`
+- [x] Expected result: testes passam e verificam que `loader.path` foi montado no formato fat jar.
 
 #### Acceptance Criteria
 
-- [ ] Existe validacao automatizada para formato de `loader.path` compativel com fat jar.
-- [ ] Nao existe uso residual de `loader.path=<extension.jar>` puro para extension mode.
+- [x] Existe validacao automatizada para formato de `loader.path` compativel com fat jar.
+- [x] Nao existe uso residual de `loader.path=<extension.jar>` puro para extension mode.
 
 ### Milestone 2 - Fail-fast para layout de extensao invalido
 
@@ -124,7 +127,30 @@ Garantir cobertura de comportamento real em `-jar` com runtime extension.
 - [ ] Em extension mode com fat jar valido, modulo extension-only aparece no `seed4j list`.
 - [ ] Em extension mode com jar sem layout fat jar, bootstrap falha cedo.
 
-### Milestone 4 - Documentacao e validacao completa
+### Milestone 4 - Blindagem de logging do CLI contra overrides da extensao
+
+#### Goal
+
+Garantir saida operacional limpa do CLI em `extension mode`, mesmo quando a extensao carrega configuracao propria de logging.
+
+#### Changes
+
+- [ ] Definir contrato de logging do child process em `extension mode` (sem logs de startup/info por padrao).
+- [ ] Atualizar bootstrap para aplicar baseline de logging com precedencia sobre `logging.*` e `logback-spring.xml` da extensao.
+- [ ] Garantir que overrides da extensao nao alterem a observabilidade padrao do CLI em `seed4j list` e `seed4j --version`.
+- [ ] Cobrir com testes o cenario onde `extension.jar` contem `config/application.yml` e `logback-spring.xml`.
+
+#### Validation
+
+- [ ] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapInProcessTest,Seed4JCliLauncherTest test`
+- [ ] Expected result: comandos em `extension mode` nao exibem logs de startup/info nem warnings de configuracao de logback.
+
+#### Acceptance Criteria
+
+- [ ] Em `extension mode`, a saida dos comandos permanece focada em resultado funcional (sem ruido de bootstrap/logback por padrao).
+- [ ] O comportamento e resiliente mesmo quando a extensao publica overrides de `logging.*`.
+
+### Milestone 5 - Documentacao e validacao completa
 
 #### Goal
 
@@ -150,14 +176,16 @@ Fechar com contrato documentado e trilha de verificacao completa.
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
+- [ ] Milestone 5 started
+- [ ] Milestone 5 completed
 
 ## Decisions
 
@@ -173,6 +201,10 @@ Fechar com contrato documentado e trilha de verificacao completa.
   Rationale: manter configuracao simples e reduzir superficie de erro operacional.
   Date/Author: 2026-04-27 / Codex
 
+- Decision: o CLI deve impor baseline de logging no child process em `extension mode`, independentemente dos overrides da extensao.
+  Rationale: preservar UX dos comandos e evitar ruido operacional apos habilitar classpath fat jar.
+  Date/Author: 2026-04-27 / User + Codex
+
 ## Risks and Mitigations
 
 - Risk: Quebra de compatibilidade para usuarios com extensoes legadas em jar flat.
@@ -187,17 +219,21 @@ Fechar com contrato documentado e trilha de verificacao completa.
 - Risk: Erro de validacao de layout reduzir observabilidade (mensagem vaga).
   Mitigation: padronizar texto de erro com arquivo alvo e expectativa explicita (`BOOT-INF/classes` ausente).
 
+- Risk: Blindagem de logging esconder sinais uteis para diagnostico.
+  Mitigation: limitar supressao ao bootstrap padrao e manter logs de erro/falha de runtime.
+
 ## Validation Strategy
 
 1. Rodar testes unitarios de bootstrap e montagem de comando para validar `loader.path`.
 2. Rodar testes unitarios de validacao de runtime para cenarios validos e invalidos.
 3. Rodar testes empacotados de extension mode (`--version` e `list`).
-4. Rodar `./mvnw clean verify` para regressao completa.
-5. Rodar `npm run prettier:check` para garantir formatacao consistente.
-6. Validacao manual final:
+4. Rodar testes de blindagem de logging no caminho publico de extension mode.
+5. Rodar `./mvnw clean verify` para regressao completa.
+6. Rodar `npm run prettier:check` para garantir formatacao consistente.
+7. Validacao manual final:
    - configurar `~/.config/seed4j-cli.yml` com `mode: extension`,
    - instalar fat jar em `~/.config/seed4j-cli/runtime/active/extension.jar`,
-   - executar `seed4j list` e confirmar presenca de modulo de extensao.
+   - executar `seed4j list` e confirmar presenca de modulo de extensao sem logs de startup indevidos.
 
 ## Rollout and Recovery
 
