@@ -153,7 +153,32 @@ Garantir saida operacional limpa do CLI em `extension mode`, mesmo quando a exte
 - [x] Em `extension mode`, a saida dos comandos permanece focada em resultado funcional (sem ruido de bootstrap/logback por padrao).
 - [x] O comportamento e resiliente mesmo quando a extensao publica overrides de `logging.*`.
 
-### Milestone 5 - Documentacao e validacao completa
+### Milestone 5 - Cobertura de validacao do layout do extension jar
+
+#### Goal
+
+Eliminar o gap de cobertura no `RuntimeExtensionJarLayoutValidator` sem remover ramos uteis de protecao.
+
+#### Changes
+
+- [ ] Cobrir o caminho de `IOException` na leitura do `extension.jar` para validar fallback com `InvalidRuntimeConfigurationException`.
+- [ ] Cobrir o ramo de entrada `BOOT-INF/classes` sem `/` final.
+- [ ] Cobrir o ramo onde o jar contem apenas entradas filhas (`BOOT-INF/classes/...`) sem entrada explicita de diretorio.
+- [ ] Garantir que `./mvnw clean verify` deixa de falhar por cobertura nessa classe.
+
+#### Validation
+
+- [ ] Command: `./mvnw -Dtest=RuntimeSelectionTest test`
+- [ ] Expected result: cenarios validos/invalidos de layout continuam corretos e os novos ramos ficam exercitados.
+- [ ] Command: `./mvnw clean verify`
+- [ ] Expected result: sem violacao de cobertura para `RuntimeExtensionJarLayoutValidator`.
+
+#### Acceptance Criteria
+
+- [ ] A classe `RuntimeExtensionJarLayoutValidator` fica com branch/line coverage em 100%.
+- [ ] Nao houve remocao de ramos defensivos apenas para satisfazer cobertura.
+
+### Milestone 6 - Documentacao e validacao completa
 
 #### Goal
 
@@ -189,6 +214,8 @@ Fechar com contrato documentado e trilha de verificacao completa.
 - [x] Milestone 4 completed
 - [ ] Milestone 5 started
 - [ ] Milestone 5 completed
+- [ ] Milestone 6 started
+- [ ] Milestone 6 completed
 
 ## Decisions
 
