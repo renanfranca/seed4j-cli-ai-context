@@ -136,20 +136,20 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 
 #### Changes
 
-- [ ] Executar suite alvo e verificacao completa do repositorio.
-- [ ] Atualizar documentacao tecnica minima (ou nota no proprio ExecPlan) com comando real de verificacao manual.
+- [x] Executar suite alvo e verificacao completa do repositorio.
+- [x] Atualizar documentacao tecnica minima (ou nota no proprio ExecPlan) com comando real de verificacao manual.
 
 #### Validation
 
-- [ ] Command: `./mvnw clean verify`
-- [ ] Expected result: build verde com cobertura e integracao passando.
-- [ ] Command: `seed4j --version`
-- [ ] Expected result: em `extension mode`, sem warnings de logback e sem `null` nas versoes.
+- [x] Command: `./mvnw clean verify` (executado em 2026-04-28)
+- [x] Expected result: build verde com cobertura e integracao passando. (observado: `BUILD SUCCESS`)
+- [x] Command: `seed4j --version` (executado em 2026-04-28)
+- [x] Expected result: em `extension mode`, sem warnings de logback e sem `null` nas versoes. (observado: `Seed4J CLI v0.0.0-SNAPSHOT`, `Seed4J version: 2.2.0`, `EXIT_CODE:0`)
 
 #### Acceptance Criteria
 
-- [ ] Correcao comprovada por teste automatizado e verificacao manual.
-- [ ] Plano atualizado com status final e decisoes tomadas.
+- [x] Correcao comprovada por teste automatizado e verificacao manual.
+- [x] Plano atualizado com status final e decisoes tomadas.
 
 ## Progress
 
@@ -159,8 +159,12 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 - [x] Milestone 2 completed
 - [x] Milestone 3 started
 - [x] Milestone 3 completed
-- [ ] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 4 started
+- [x] Milestone 4 completed
+
+## TDD Cycle Log
+
+- Cycle 1 | Fechamento E2E do bug em `extension mode` | expected failure: regressao no `clean verify` ou `seed4j --version` com warning/null | 🔴 red result: nenhuma regressao observada, suite completa verde | 🌱 green change: sem alteracao de codigo, apenas confirmacao de comportamento final | suite result: `./mvnw clean verify` = `BUILD SUCCESS` | vertical checkpoint (when due): `seed4j --version` em `extension mode` sem warnings e com versoes nao nulas (`EXIT_CODE:0`) | 🌀 refactor: nao aplicado
 
 ## Decisions
 
@@ -182,6 +186,10 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 
 - Decision: usar `logging.config=classpath:seed4j-cli-logback-spring.xml` no child process de `extension mode`.
   Rationale: remove ambiguidade com `logback-spring.xml` da extensao sem perder extensoes de configuracao do Spring Boot no logback do CLI.
+  Date/Author: 2026-04-28 / Codex
+
+- Decision: Fechar o milestone 4 somente apos `clean verify` completo e checkpoint vertical com o binario `seed4j` real.
+  Rationale: evita falso positivo de regressao coberta apenas por testes internos.
   Date/Author: 2026-04-28 / Codex
 
 ## Risks and Mitigations
@@ -223,3 +231,4 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 - Publicar versao em system property no parent launcher e mais robusto do que ler `project.*` diretamente no child quando ha shadowing de resources.
 - Fallback explicito para `unknown` impede saida `null` mesmo quando metadados de build nao estao disponiveis.
 - Rodar `package` e testes empacotados em paralelo pode causar falso negativo por corrida no artefato em `target/`; checkpoint vertical deve ser sequencial.
+- O checkpoint manual com `seed4j --version` no ambiente local (2026-04-28) confirmou `runtime mode: extension`, sem warnings de logback e com `EXIT_CODE:0`.
