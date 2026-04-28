@@ -112,19 +112,21 @@ Impedir que `logback-spring.xml` da extensao seja selecionado quando o child pro
 
 #### Changes
 
-- [ ] Ajustar `Seed4JCliLauncher` para apontar `logging.config` para recurso exclusivo do CLI (nao ambiguo no classpath).
-- [ ] Caso necessario, criar arquivo de logback dedicado do CLI com nome unico em `src/main/resources`.
-- [ ] Manter nivel de log operacional atual (`logging.level.root=ERROR`) e sem startup info em `extension mode`.
+- [x] Ajustar `Seed4JCliLauncher` para apontar `logging.config` para recurso exclusivo do CLI (nao ambiguo no classpath).
+- [x] Caso necessario, criar arquivo de logback dedicado do CLI com nome unico em `src/main/resources`.
+- [x] Manter nivel de log operacional atual (`logging.level.root=ERROR`) e sem startup info em `extension mode`.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=Seed4JCliLauncherTest,ExtensionRuntimeBootstrapInProcessTest test`
-- [ ] Expected result: nenhum warning de watchable/URL aparece na saida de `--version` em `extension mode`.
+- [x] Command: `./mvnw -Dtest=Seed4JCliLauncherTest,ExtensionRuntimeBootstrapInProcessTest test`
+- [x] Expected result: launcher publica `logging.config` dedicado do CLI e baseline de logging permanece estavel em `extension mode`.
+- [x] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapPackagedJarIT test`
+- [x] Expected result: cenario empacotado com `logback-spring.xml` da extensao (`scan="true"`) nao emite warnings de watchable/URL na saida de `--version`.
 
 #### Acceptance Criteria
 
-- [ ] Warnings de Logback deixam de aparecer no cenario de extensao com `scan="true"` no logback da propria extensao.
-- [ ] Configuracao de logging do CLI segue estavel e previsivel.
+- [x] Warnings de Logback deixam de aparecer no cenario de extensao com `scan="true"` no logback da propria extensao.
+- [x] Configuracao de logging do CLI segue estavel e previsivel.
 
 ### Milestone 4 - Fechamento com validacao end-to-end e documentacao curta
 
@@ -155,8 +157,8 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
 
@@ -176,6 +178,10 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 
 - Decision: Em caso de metadado ausente, usar fallback textual `unknown` no output de versao.
   Rationale: evita regressao para `null` e mantem diagnostico operacional legivel.
+  Date/Author: 2026-04-28 / Codex
+
+- Decision: usar `logging.config=classpath:seed4j-cli-logback-spring.xml` no child process de `extension mode`.
+  Rationale: remove ambiguidade com `logback-spring.xml` da extensao sem perder extensoes de configuracao do Spring Boot no logback do CLI.
   Date/Author: 2026-04-28 / Codex
 
 ## Risks and Mitigations
@@ -216,3 +222,4 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 - Os ITs empacotados dependem de um artefato `target/seed4j-cli-*.jar` existente; para reproducao local consistente, rodar `./mvnw -DskipTests package` antes da suite de failsafe.
 - Publicar versao em system property no parent launcher e mais robusto do que ler `project.*` diretamente no child quando ha shadowing de resources.
 - Fallback explicito para `unknown` impede saida `null` mesmo quando metadados de build nao estao disponiveis.
+- Rodar `package` e testes empacotados em paralelo pode causar falso negativo por corrida no artefato em `target/`; checkpoint vertical deve ser sequencial.
