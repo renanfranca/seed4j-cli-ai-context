@@ -65,20 +65,20 @@ Transformar o bug observado manualmente em cenario de teste reproduzivel.
 
 #### Changes
 
-- [ ] Adicionar/ajustar teste em `src/test/java/com/seed4j/cli/bootstrap/domain` que simula `extension mode` com extensao contendo:
+- [x] Adicionar/ajustar teste em `src/test/java/com/seed4j/cli/bootstrap/domain` que simula `extension mode` com extensao contendo:
   - `config/application.yml` sem chaves `project.*`.
   - `logback-spring.xml` com `scan="true"`.
-- [ ] Garantir que o teste capture saida de `--version` e valide os sintomas atuais (antes da correcao) para evitar falso positivo.
+- [x] Garantir que o teste capture saida de `--version` e valide os sintomas atuais (antes da correcao) para evitar falso positivo.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
-- [ ] Expected result: cenario de regressao atual e observavel e falha antes da correcao.
+- [x] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
+- [x] Expected result: cenario de regressao atual e observavel e falha antes da correcao.
 
 #### Acceptance Criteria
 
-- [ ] Existe ao menos um teste vermelho que reproduz `vnull` ou warning de logback sob `extension mode`.
-- [ ] O cenario usa fluxo real de child process (nao apenas teste in-process).
+- [x] Existe ao menos um teste vermelho que reproduz `vnull` ou warning de logback sob `extension mode`.
+- [x] O cenario usa fluxo real de child process (nao apenas teste in-process).
 
 ### Milestone 2 - Blindar origem de versao do CLI contra shadowing da extensao
 
@@ -151,8 +151,8 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
@@ -205,3 +205,4 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 
 - Em runtime com `PropertiesLauncher` + `loader.path`, recursos de configuracao da extensao podem ter precedencia sobre recursos do CLI.
 - Confiar em `@Value` de chaves definidas em `application.yml` generico e fragil quando o classpath inclui extensoes.
+- Os ITs empacotados dependem de um artefato `target/seed4j-cli-*.jar` existente; para reproducao local consistente, rodar `./mvnw -DskipTests package` antes da suite de failsafe.
