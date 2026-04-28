@@ -88,21 +88,21 @@ Garantir que `Seed4JCommandsFactory` nao dependa de `project.*` carregado do cla
 
 #### Changes
 
-- [ ] Introduzir fonte explicita de versao do CLI para `extension mode` (ex.: system properties publicadas pelo parent launcher).
-- [ ] Em `Seed4JCliLauncher`, publicar propriedades dedicadas com versao do CLI e versao do seed4j antes de iniciar child process.
-- [ ] Em `Seed4JCommandsFactory`, substituir `@Value("${project.*}")` direto por leitura robusta com fallback definido.
-- [ ] Definir fallback seguro e nao-nulo para qualquer cenario de metadado ausente.
+- [x] Introduzir fonte explicita de versao do CLI para `extension mode` (ex.: system properties publicadas pelo parent launcher).
+- [x] Em `Seed4JCliLauncher`, publicar propriedades dedicadas com versao do CLI e versao do seed4j antes de iniciar child process.
+- [x] Em `Seed4JCommandsFactory`, substituir `@Value("${project.*}")` direto por leitura robusta com fallback definido.
+- [x] Definir fallback seguro e nao-nulo para qualquer cenario de metadado ausente.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=Seed4JCommandsFactoryTest,Seed4JCliLauncherTest test`
-- [ ] Expected result: versoes nunca ficam `null` no output formatado.
+- [x] Command: `./mvnw -Dtest=Seed4JCommandsFactoryTest,Seed4JCliLauncherTest test`
+- [x] Expected result: versoes nunca ficam `null` no output formatado.
 
 #### Acceptance Criteria
 
-- [ ] `Seed4J CLI vnull` nao ocorre mais.
-- [ ] `Seed4J version: null` nao ocorre mais.
-- [ ] Testes cobrem o caso onde `config/application.yml` da extensao nao contem `project.*`.
+- [x] `Seed4J CLI vnull` nao ocorre mais.
+- [x] `Seed4J version: null` nao ocorre mais.
+- [x] Testes cobrem o caso onde `config/application.yml` da extensao nao contem `project.*`.
 
 ### Milestone 3 - Tornar o `logging.config` deterministico para o CLI
 
@@ -153,8 +153,8 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
@@ -168,6 +168,14 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 
 - Decision: Tornar `logging.config` de `extension mode` nao ambiguo no classpath.
   Rationale: evita selecao acidental de `logback-spring.xml` da extensao.
+  Date/Author: 2026-04-28 / Codex
+
+- Decision: Publicar `seed4j.cli.version` e `seed4j.cli.seed4j.version` no launcher antes do child process.
+  Rationale: remove dependencia de `project.*` no classpath da extensao para resolver versoes.
+  Date/Author: 2026-04-28 / Codex
+
+- Decision: Em caso de metadado ausente, usar fallback textual `unknown` no output de versao.
+  Rationale: evita regressao para `null` e mantem diagnostico operacional legivel.
   Date/Author: 2026-04-28 / Codex
 
 ## Risks and Mitigations
@@ -206,3 +214,5 @@ Fechar a correcao com validacao local completa e registro objetivo do comportame
 - Em runtime com `PropertiesLauncher` + `loader.path`, recursos de configuracao da extensao podem ter precedencia sobre recursos do CLI.
 - Confiar em `@Value` de chaves definidas em `application.yml` generico e fragil quando o classpath inclui extensoes.
 - Os ITs empacotados dependem de um artefato `target/seed4j-cli-*.jar` existente; para reproducao local consistente, rodar `./mvnw -DskipTests package` antes da suite de failsafe.
+- Publicar versao em system property no parent launcher e mais robusto do que ler `project.*` diretamente no child quando ha shadowing de resources.
+- Fallback explicito para `unknown` impede saida `null` mesmo quando metadados de build nao estao disponiveis.
