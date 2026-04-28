@@ -186,21 +186,21 @@ Fechar com contrato documentado e trilha de verificacao completa.
 
 #### Changes
 
-- [ ] Atualizar `documentation/Commands.md` com contrato de runtime extension para Spring Boot fat jar.
-- [ ] Documentar breaking change: suporte legado de jar flat removido.
-- [ ] Incluir exemplos de erro e de setup correto com `extension.jar` fat jar.
+- [x] Atualizar `documentation/Commands.md` com contrato de runtime extension para Spring Boot fat jar.
+- [x] Documentar breaking change: suporte legado de jar flat removido.
+- [x] Incluir exemplos de erro e de setup correto com `extension.jar` fat jar.
 
 #### Validation
 
-- [ ] Command: `./mvnw clean verify`
-- [ ] Expected result: suite completa verde (unit, integration, coverage, checkstyle).
-- [ ] Command: `npm run prettier:check`
-- [ ] Expected result: sem divergencias de formatacao.
+- [x] Command: `./mvnw clean verify`
+- [x] Expected result: suite completa verde (unit, integration, coverage, checkstyle).
+- [x] Command: `npm run prettier:check`
+- [x] Expected result: sem divergencias de formatacao.
 
 #### Acceptance Criteria
 
-- [ ] Contrato final esta claro para quem gera extensao.
-- [ ] Nao ha ambiguidade entre formato suportado e formato rejeitado.
+- [x] Contrato final esta claro para quem gera extensao.
+- [x] Nao ha ambiguidade entre formato suportado e formato rejeitado.
 
 ## Progress
 
@@ -214,8 +214,8 @@ Fechar com contrato documentado e trilha de verificacao completa.
 - [x] Milestone 4 completed
 - [x] Milestone 5 started
 - [x] Milestone 5 completed
-- [ ] Milestone 6 started
-- [ ] Milestone 6 completed
+- [x] Milestone 6 started
+- [x] Milestone 6 completed
 
 ## Decisions
 
