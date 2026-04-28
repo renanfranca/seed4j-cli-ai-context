@@ -161,22 +161,22 @@ Eliminar o gap de cobertura no `RuntimeExtensionJarLayoutValidator` sem remover 
 
 #### Changes
 
-- [ ] Cobrir o caminho de `IOException` na leitura do `extension.jar` para validar fallback com `InvalidRuntimeConfigurationException`.
-- [ ] Cobrir o ramo de entrada `BOOT-INF/classes` sem `/` final.
-- [ ] Cobrir o ramo onde o jar contem apenas entradas filhas (`BOOT-INF/classes/...`) sem entrada explicita de diretorio.
-- [ ] Garantir que `./mvnw clean verify` deixa de falhar por cobertura nessa classe.
+- [x] Cobrir o caminho de `IOException` na leitura do `extension.jar` para validar fallback com `InvalidRuntimeConfigurationException`.
+- [x] Cobrir o ramo de entrada `BOOT-INF/classes` sem `/` final.
+- [x] Cobrir o ramo onde o jar contem apenas entradas filhas (`BOOT-INF/classes/...`) sem entrada explicita de diretorio.
+- [x] Garantir que `./mvnw clean verify` deixa de falhar por cobertura nessa classe.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=RuntimeSelectionTest test`
-- [ ] Expected result: cenarios validos/invalidos de layout continuam corretos e os novos ramos ficam exercitados.
-- [ ] Command: `./mvnw clean verify`
-- [ ] Expected result: sem violacao de cobertura para `RuntimeExtensionJarLayoutValidator`.
+- [x] Command: `./mvnw -Dtest=RuntimeSelectionTest test`
+- [x] Expected result: cenarios validos/invalidos de layout continuam corretos e os novos ramos ficam exercitados.
+- [x] Command: `./mvnw clean verify`
+- [x] Expected result: sem violacao de cobertura para `RuntimeExtensionJarLayoutValidator`.
 
 #### Acceptance Criteria
 
-- [ ] A classe `RuntimeExtensionJarLayoutValidator` fica com branch/line coverage em 100%.
-- [ ] Nao houve remocao de ramos defensivos apenas para satisfazer cobertura.
+- [x] A classe `RuntimeExtensionJarLayoutValidator` fica com branch/line coverage em 100%.
+- [x] Nao houve remocao de ramos defensivos apenas para satisfazer cobertura.
 
 ### Milestone 6 - Documentacao e validacao completa
 
@@ -212,8 +212,8 @@ Fechar com contrato documentado e trilha de verificacao completa.
 - [x] Milestone 3 completed
 - [x] Milestone 4 started
 - [x] Milestone 4 completed
-- [ ] Milestone 5 started
-- [ ] Milestone 5 completed
+- [x] Milestone 5 started
+- [x] Milestone 5 completed
 - [ ] Milestone 6 started
 - [ ] Milestone 6 completed
 
