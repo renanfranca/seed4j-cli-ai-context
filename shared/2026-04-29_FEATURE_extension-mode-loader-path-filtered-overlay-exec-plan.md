@@ -4,7 +4,7 @@ Este ExecPlan e um documento vivo. Atualize `Progress`, `Decisions`, `Risks` e `
 
 ## Purpose / Big Picture
 
-Hoje o `extension mode` mistura runtime completo da extensao com runtime do CLI via `loader.path`, o que permite interferencia global (por exemplo `config/application.yml` e `logback-spring.xml`) e quebra a regra aditiva de catalogo. O objetivo deste plano e manter a estrategia `loader.path` (sem worker separado) e endurecer o bootstrap para importar apenas as contribuicoes necessarias de modulo/extensao, preservando o runtime do CLI como fonte de verdade. O resultado observavel esperado e: `seed4j list` continua aditivo (nada do core some), modulos da extensao aparecem, e `seed4j apply` continua funcional para modulos da extensao.
+Hoje o `extension mode` mistura runtime completo da extensao com runtime do CLI via `loader.path`, o que permite interferencia global (por exemplo `config/application.yml` e `logback-spring.xml`) e quebra a regra aditiva de catalogo. O objetivo deste plano e manter a estrategia `loader.path` (sem worker separado) e endurecer o bootstrap para importar apenas as contribuicoes necessarias de modulo/extensao, preservando o runtime do CLI como fonte de verdade. O resultado observavel esperado e: `seed4j list` continua aditivo (nada do core some), modulos da extensao aparecem, e `seed4j apply` continua funcional para qualquer modulo visivel no catalogo final (core + extensao).
 
 ## Scope
 
@@ -55,8 +55,9 @@ Restricao explicita:
 - `seed4j list` em extension mode:
   - mostra todos os slugs do core;
   - adiciona slugs da extensao;
+  - reflete a uniao implicita de modulos carregados no runtime Spring (core + extensao), sem merge manual de catalogo;
   - nao remove slugs do core por `hidden-resources` vindo da extensao.
-- `seed4j apply` em modulo da extensao continua funcionando com readers/resources da extensao.
+- `seed4j apply` continua funcionando para modulos do core e da extensao; para modulos da extensao, readers/resources da propria extensao permanecem disponiveis.
 - Extensao com `Start-Class` em pacote nao `com.seed4j` funciona sem alteracoes no gerador.
 - `BOOT-INF/lib` da extensao nao sobrescreve libs base do CLI; quando necessario, apenas libs ausentes podem ser adicionadas de forma controlada.
 
@@ -172,7 +173,7 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - [ ] Adicionar/atualizar ITs empacotados para provar:
   - [ ] `list` aditivo (core intacto + slugs da extensao);
-  - [ ] `apply` de modulo da extensao funcional;
+  - [ ] `apply` funcional para modulos do core e da extensao;
   - [ ] `--version` sem regressao de logging/versao.
 - [ ] Atualizar documentacao de extension mode no repo `seed4j-cli` para refletir overlay filtrado + politica de libs.
 - [ ] Registrar exemplos de falha com mensagens esperadas.
@@ -223,7 +224,7 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 ## Risks and Mitigations
 
 - Risk: Remover recursos demais no filtro quebrar `apply` (readers/templates).
-  Mitigation: filtro por denylist minima (somente recursos globais) + testes de apply com modulos da extensao.
+  Mitigation: filtro por denylist minima (somente recursos globais) + testes de apply com modulos do core e da extensao.
 
 - Risk: Extensao futura depender de lib nova que nao existe no CLI.
   Mitigation: estrategia de libs ausentes com inclusao seletiva e teste dedicado.
