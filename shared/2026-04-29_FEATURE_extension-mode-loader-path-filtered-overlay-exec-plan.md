@@ -4,7 +4,7 @@ Este ExecPlan e um documento vivo. Atualize `Progress`, `Decisions`, `Risks` e `
 
 ## Purpose / Big Picture
 
-Hoje o `extension mode` mistura runtime completo da extensao com runtime do CLI via `loader.path`, o que permite interferencia global (por exemplo `config/application.yml` e `logback-spring.xml`) e quebra a regra aditiva de catalogo. O objetivo deste plano e manter a estrategia `loader.path` (sem worker separado) e endurecer o bootstrap para importar apenas as contribuicoes necessarias de modulo/extensao, preservando o runtime do CLI como fonte de verdade. O resultado observavel esperado e: `seed4j list` continua aditivo (nada do core some), modulos da extensao aparecem, e `seed4j apply` continua funcional para qualquer modulo visivel no catalogo final (core + extensao).
+Hoje o `extension mode` mistura runtime completo da extensao com runtime do CLI via `loader.path`, o que permite interferencia global (por exemplo `config/application.yml` e `logback-spring.xml`) e quebra a regra aditiva de catalogo. O objetivo deste plano e manter a estrategia `loader.path` (sem worker separado) e endurecer o bootstrap para importar apenas as contribuicoes necessarias de modulo/extensao, preservando o runtime do CLI como fonte de verdade. O resultado observavel esperado e: `seed4j list` continua aditivo (nada do core some), modulos da extensao aparecem, e `seed4j apply` continua funcional para qualquer modulo visivel no catalogo final (core + extensao), com override global de readers/resources da extensao quando presentes no contexto Spring.
 
 ## Scope
 
@@ -33,6 +33,7 @@ Restricao explicita:
 - `recursos globais`: arquivos que alteram bootstrap/configuracao do processo inteiro (`config/application*.yml`, `config/application*.yaml`, `config/application*.properties`, `logback*.xml`).
 - `catalogo aditivo`: em `extension mode`, modulos do core continuam visiveis e a extensao apenas adiciona novos slugs.
 - `libs ausentes`: jars presentes em `BOOT-INF/lib` da extensao que nao existem no classpath base do CLI (comparando por coordenada inferida do nome do jar).
+- `override global de readers/resources`: em `extension mode`, readers/resources de dependencias carregados pela extensao participam do mesmo contexto Spring do CLI e podem sobrescrever valores usados por qualquer `apply` (modulos do core e da extensao), conforme precedencia de bean/merge.
 
 ## Existing Context
 
@@ -42,6 +43,7 @@ Restricao explicita:
 - O CLI sobe Spring com scan base do core+CLI, e atualmente depende de composicao de classpath para enxergar contribuicoes da extensao:
   - `src/main/java/com/seed4j/cli/Seed4JCliApp.java`
 - As extensoes exemplo trazem recursos globais em `src/main/resources/config/application.yml` e `src/main/resources/logback-spring.xml`, e tambem recursos funcionais em `/generator/**` usados por readers de dependencias.
+- As extensoes geradas registram readers de dependencias com `@Repository` + `@Order(Ordered.HIGHEST_PRECEDENCE)`, e o core agrega `Collection<...Reader>` com merge de versoes; por isso o override da extensao impacta globalmente o `apply` quando ha mesma chave/source.
 - Investigacoes e specs existentes em `_temporary/ai_agent/seed4j-cli-ai-context/shared/` confirmam:
   - risco estrutural de classpath compartilhado;
   - necessidade de manter catalogo aditivo;
@@ -57,7 +59,9 @@ Restricao explicita:
   - adiciona slugs da extensao;
   - reflete a uniao implicita de modulos carregados no runtime Spring (core + extensao), sem merge manual de catalogo;
   - nao remove slugs do core por `hidden-resources` vindo da extensao.
-- `seed4j apply` continua funcionando para modulos do core e da extensao; para modulos da extensao, readers/resources da propria extensao permanecem disponiveis.
+- `seed4j apply` continua funcionando para modulos do core e da extensao.
+- Em `extension mode`, `apply` usa o conjunto global de readers/resources ativos no contexto Spring (core + extensao).
+- Overrides de readers/resources da extensao sao comportamento esperado: quando houver sobreposicao de chave/source, eles podem afetar `apply` de modulos do core e da extensao.
 - Extensao com `Start-Class` em pacote nao `com.seed4j` funciona sem alteracoes no gerador.
 - `BOOT-INF/lib` da extensao nao sobrescreve libs base do CLI; quando necessario, apenas libs ausentes podem ser adicionadas de forma controlada.
 
@@ -99,7 +103,7 @@ Trocar o `loader.path` da extensao bruta por `loader.path` apontando para o over
   - [ ] remover `config/application*.yaml`;
   - [ ] remover `config/application*.properties`;
   - [ ] remover `logback*.xml`.
-- [ ] Preservar recursos funcionais necessarios (ex.: `generator/**`, `messages/**`, templates e assets).
+- [ ] Preservar recursos funcionais necessarios (ex.: `generator/**`, `messages/**`, templates e assets), incluindo os usados por readers compartilhados de dependencias.
 - [ ] Atualizar `RuntimeExtensionLoaderPathResolver` para receber caminho do overlay local em vez de URL `jar:` para `BOOT-INF/classes`.
 - [ ] Manter baseline de logging do CLI no child process.
 
@@ -112,6 +116,7 @@ Trocar o `loader.path` da extensao bruta por `loader.path` apontando para o over
 
 - [ ] `seed4j.hidden-resources` da extensao nao remove mais modulo do core em `list`.
 - [ ] Modulos da extensao continuam sendo descobertos.
+- [ ] Recursos usados por readers de dependencias da extensao permanecem acessiveis no overlay.
 
 ### Milestone 3 - Descoberta robusta para pacote customizado (`Start-Class`)
 
@@ -131,12 +136,13 @@ Garantir que contribuicoes da extensao sejam carregadas mesmo quando a extensao 
 #### Validation
 
 - [ ] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapListPackagedJarIT,ExtensionRuntimeBootstrapPackagedJarIT failsafe:integration-test failsafe:verify`
-- [ ] Expected result: list/apply em extension mode funcionam para pacotes diferentes sem erro de bean duplicado.
+- [ ] Expected result: list/apply em extension mode funcionam para pacotes diferentes sem erro de bean duplicado, mantendo override global de readers/resources da extensao.
 
 #### Acceptance Criteria
 
 - [ ] O fluxo nao depende de naming fixo `com.seed4j.extension`.
 - [ ] `Start-Class` ausente/invalido falha com mensagem explicita.
+- [ ] O comportamento global de override de readers/resources independe do pacote base da extensao.
 
 ### Milestone 4 - Politica de `BOOT-INF/lib` sem sobrescrever runtime do CLI
 
@@ -173,7 +179,8 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - [ ] Adicionar/atualizar ITs empacotados para provar:
   - [ ] `list` aditivo (core intacto + slugs da extensao);
-  - [ ] `apply` funcional para modulos do core e da extensao;
+  - [ ] `apply` de modulo do core refletindo override de readers/resources da extensao quando houver sobreposicao;
+  - [ ] `apply` de modulo da extensao funcional com o mesmo conjunto global de readers/resources;
   - [ ] `--version` sem regressao de logging/versao.
 - [ ] Atualizar documentacao de extension mode no repo `seed4j-cli` para refletir overlay filtrado + politica de libs.
 - [ ] Registrar exemplos de falha com mensagens esperadas.
@@ -189,6 +196,7 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - [ ] Mudanca validada com testes e cenario manual reproduzivel.
 - [ ] Documentacao operacional alinhada ao comportamento final.
+- [ ] Contrato de override global no `apply` explicitado e validado.
 
 ## Progress
 
@@ -221,10 +229,17 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
   Rationale: preservar catalogo aditivo e estabilidade de logging/configuracao.
   Date/Author: 2026-04-29 / Codex
 
+- Decision: Override global de readers/resources da extensao no `apply` e comportamento esperado em `extension mode`.
+  Rationale: o contexto Spring e compartilhado (core + extensao), e a resolucao de dependencias usa colecoes ordenadas + merge; o plano deve assumir esse contrato e testa-lo explicitamente.
+  Date/Author: 2026-04-30 / User + Codex
+
 ## Risks and Mitigations
 
-- Risk: Remover recursos demais no filtro quebrar `apply` (readers/templates).
-  Mitigation: filtro por denylist minima (somente recursos globais) + testes de apply com modulos do core e da extensao.
+- Risk: Remover recursos demais no filtro quebrar `apply` global (readers/templates da extensao deixam de afetar core/extensao).
+  Mitigation: filtro por denylist minima (somente recursos globais) + testes de apply em modulo core e modulo da extensao.
+
+- Risk: Override global da extensao alterar versoes/dependencias de modulos do core de forma nao intencional.
+  Mitigation: adicionar IT dedicado de sobreposicao explicita (mesma chave/source) + documentar contrato operacional do `apply` em extension mode.
 
 - Risk: Extensao futura depender de lib nova que nao existe no CLI.
   Mitigation: estrategia de libs ausentes com inclusao seletiva e teste dedicado.
@@ -241,9 +256,9 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 ## Validation Strategy
 
 1. Executar testes unitarios focados no bootstrap (`launcher`, `resolver`, `runtime selection`).
-2. Executar testes de integracao empacotados para `list`, `apply` e `--version` em extension mode.
+2. Executar testes de integracao empacotados para `list`, `apply` (core + extensao com sobreposicao) e `--version` em extension mode.
 3. Executar `./mvnw clean verify`.
-4. Executar validacao manual de smoke test com `seed4j list` e `seed4j apply` em ambiente local de extension mode.
+4. Executar validacao manual de smoke test com `seed4j list` e `seed4j apply` em modulo core e modulo da extensao, em ambiente local de extension mode.
 
 ## Rollout and Recovery
 
@@ -251,7 +266,7 @@ Rollout:
 
 1. Publicar versao do `seed4j-cli` com overlay filtrado habilitado por padrao no `extension mode`.
 2. Validar em ambiente real com extensao existente (sem regenerar extensao).
-3. Monitorar feedback para casos de libs ausentes e ajustar allowlist seletiva se necessario.
+3. Monitorar feedback para casos de libs ausentes e para efeitos de override global no `apply`, ajustando testes/documentacao se necessario.
 
 Recovery:
 
@@ -264,4 +279,5 @@ Recovery:
 - `BOOT-INF/classes` bruto da extensao permite interferencia global mesmo sem `BOOT-INF/lib`.
 - Filtro cirurgico de recursos globais preserva contribuicoes de modulo e remove efeito colateral de runtime.
 - O modelo hexagonal reduz acoplamento de dominio, mas nao elimina risco de classpath/config em runtime compartilhado.
-- Para manter `loader.path` robusto, a regra principal e: extensao adiciona capacidade funcional; CLI permanece dono da infraestrutura.
+- Em `extension mode`, readers/resources de dependencias da extensao atuam globalmente no `apply` por design do contexto Spring compartilhado.
+- Para manter `loader.path` robusto, a regra principal e: CLI permanece dono da infraestrutura de runtime, e a extensao pode sobrescrever contribuicoes funcionais de `apply` de forma explicita e testada.
