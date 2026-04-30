@@ -75,20 +75,22 @@ Criar infraestrutura de bootstrap para extrair e reutilizar classes/resources da
 
 #### Changes
 
-- [ ] Adicionar tipo de dominio para identidade de cache da extensao (hash de `extension.jar` e metadados relevantes).
-- [ ] Adicionar componente para materializar overlay em `~/.config/seed4j-cli/runtime/cache/<hash>/classes`.
-- [ ] Garantir idempotencia: cache hit nao reextrai; cache miss extrai atomico.
-- [ ] Atualizar limpeza/erros para nao deixar cache parcial em caso de falha.
+- [x] Adicionar tipo de dominio para identidade de cache da extensao (hash de `extension.jar` e metadados relevantes).
+- [x] Adicionar componente para materializar overlay em `~/.config/seed4j-cli/runtime/cache/<hash>/classes`.
+- [x] Garantir idempotencia: cache hit nao reextrai; cache miss extrai atomico.
+- [x] Atualizar limpeza/erros para nao deixar cache parcial em caso de falha.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest test`
-- [ ] Expected result: novos testes de bootstrap/cache passam e nao quebram selecao de runtime.
+- [x] Command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest test`
+- [x] Expected result: novos testes de bootstrap/cache passam e nao quebram selecao de runtime.
+- [x] Additional command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest,RuntimeExtensionOverlayCacheTest test`
+- [x] Additional result: suite combinada do milestone verde.
 
 #### Acceptance Criteria
 
-- [ ] Overlay filtrado e criado em cache com estrutura previsivel.
-- [ ] Execucoes repetidas reutilizam cache sem reprocessar jar.
+- [x] Overlay filtrado e criado em cache com estrutura previsivel.
+- [x] Execucoes repetidas reutilizam cache sem reprocessar jar.
 
 ### Milestone 2 - Filtro de recursos globais e novo `loader.path`
 
@@ -200,8 +202,8 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
@@ -232,6 +234,14 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Decision: Override global de readers/resources da extensao no `apply` e comportamento esperado em `extension mode`.
   Rationale: o contexto Spring e compartilhado (core + extensao), e a resolucao de dependencias usa colecoes ordenadas + merge; o plano deve assumir esse contrato e testa-lo explicitamente.
   Date/Author: 2026-04-30 / User + Codex
+
+- Decision: Identidade de cache do overlay usa `SHA-256(extension.jar)` com prefixo de versao de layout (`overlay-v1`).
+  Rationale: permite reuso deterministico por conteudo e invalidacao controlada quando o layout do cache evoluir.
+  Date/Author: 2026-04-30 / Codex
+
+- Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
+  Rationale: evita cache parcial em falhas e garante publicacao consistente do overlay.
+  Date/Author: 2026-04-30 / Codex
 
 ## Risks and Mitigations
 
@@ -281,3 +291,4 @@ Recovery:
 - O modelo hexagonal reduz acoplamento de dominio, mas nao elimina risco de classpath/config em runtime compartilhado.
 - Em `extension mode`, readers/resources de dependencias da extensao atuam globalmente no `apply` por design do contexto Spring compartilhado.
 - Para manter `loader.path` robusto, a regra principal e: CLI permanece dono da infraestrutura de runtime, e a extensao pode sobrescrever contribuicoes funcionais de `apply` de forma explicita e testada.
+- O milestone 1 pode ser integrado ao launcher sem mudar o `loader.path` imediatamente: materializar cache cedo reduz risco e prepara a troca de path no milestone 2.
