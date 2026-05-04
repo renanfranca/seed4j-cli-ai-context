@@ -128,23 +128,23 @@ Garantir que contribuicoes da extensao sejam carregadas mesmo quando a extensao 
 
 #### Changes
 
-- [ ] Ler `Start-Class` do manifest do `extension.jar` durante bootstrap.
-- [ ] Publicar propriedade de runtime dedicada com `start-class` resolvido.
-- [ ] Ajustar inicializacao Spring no child path para incluir `spring.main.sources` apropriado sem duplicar `Seed4JCliApp`.
-- [ ] Cobrir cenarios:
-  - [ ] extensao `com.seed4j...`;
-  - [ ] extensao `com.mycompany...`.
+- [x] Ler `Start-Class` do manifest do `extension.jar` durante bootstrap.
+- [x] Publicar propriedade de runtime dedicada com `start-class` resolvido.
+- [x] Ajustar inicializacao Spring no child path para incluir `spring.main.sources` apropriado sem duplicar `Seed4JCliApp`.
+- [x] Cobrir cenarios:
+  - [x] extensao `com.seed4j...`;
+  - [x] extensao `com.mycompany...`.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapListPackagedJarIT,ExtensionRuntimeBootstrapPackagedJarIT failsafe:integration-test failsafe:verify`
-- [ ] Expected result: list/apply em extension mode funcionam para pacotes diferentes sem erro de bean duplicado, mantendo override global de readers/resources da extensao.
+- [x] Command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
+- [x] Expected result: list/apply em extension mode funcionam para pacotes diferentes sem erro de bean duplicado, mantendo override global de readers/resources da extensao.
 
 #### Acceptance Criteria
 
-- [ ] O fluxo nao depende de naming fixo `com.seed4j.extension`.
-- [ ] `Start-Class` ausente/invalido falha com mensagem explicita.
-- [ ] O comportamento global de override de readers/resources independe do pacote base da extensao.
+- [x] O fluxo nao depende de naming fixo `com.seed4j.extension`.
+- [x] `Start-Class` ausente/invalido falha com mensagem explicita.
+- [x] O comportamento global de override de readers/resources independe do pacote base da extensao.
 
 ### Milestone 4 - Politica de `BOOT-INF/lib` sem sobrescrever runtime do CLI
 
@@ -206,8 +206,8 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
 - [ ] Milestone 5 started
@@ -243,6 +243,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
   Rationale: evita cache parcial em falhas e garante publicacao consistente do overlay.
   Date/Author: 2026-04-30 / Codex
 
+- Decision: Em `extension mode`, publicar `seed4j.cli.runtime.extension.start-class` no bootstrap e consumi-la no child via `spring.main.sources`, mantendo `Seed4JCliApp` como primary source do builder.
+  Rationale: habilita descoberta de extensao em pacote customizado sem alterar scan base do CLI e sem duplicar fonte principal.
+  Date/Author: 2026-05-04 / Codex
+
 ## Risks and Mitigations
 
 - Risk: Remover recursos demais no filtro quebrar `apply` global (readers/templates da extensao deixam de afetar core/extensao).
@@ -262,6 +266,9 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - Risk: Diferencas de OS/path afetarem montagem do `loader.path`.
   Mitigation: usar `Path`/`URI` padrao Java e testes com assercao do comando gerado.
+
+- Risk: Testes empacotados (`PackagedJarIT`) executarem jar stale em `target/` e mascararem regressao/falso negativo no cenario de pacote customizado.
+  Mitigation: reconstruir `target/seed4j-cli-*.jar` antes da validacao empacotada e manter comando de validacao do milestone via `failsafe` no fluxo.
 
 ## Validation Strategy
 
@@ -293,3 +300,5 @@ Recovery:
 - Em `extension mode`, readers/resources de dependencias da extensao atuam globalmente no `apply` por design do contexto Spring compartilhado.
 - Para manter `loader.path` robusto, a regra principal e: CLI permanece dono da infraestrutura de runtime, e a extensao pode sobrescrever contribuicoes funcionais de `apply` de forma explicita e testada.
 - O milestone 1 pode ser integrado ao launcher sem mudar o `loader.path` imediatamente: materializar cache cedo reduz risco e prepara a troca de path no milestone 2.
+- `Start-Class` precisa ser validado em dois niveis: presenca no manifest e existencia do `.class` em `BOOT-INF/classes`, para falha explicita antes de subir o child process.
+- `spring.main.sources` com o `Start-Class` da extensao permite carregar contribuicoes fora de `com.seed4j...` sem alterar contrato do gerador nem scan base da aplicacao CLI.
