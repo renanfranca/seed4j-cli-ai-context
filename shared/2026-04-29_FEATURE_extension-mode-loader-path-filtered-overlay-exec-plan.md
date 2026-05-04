@@ -100,25 +100,25 @@ Trocar o `loader.path` da extensao bruta por `loader.path` apontando para o over
 
 #### Changes
 
-- [ ] Implementar filtro de recursos globais no overlay:
-  - [ ] remover `config/application*.yml`;
-  - [ ] remover `config/application*.yaml`;
-  - [ ] remover `config/application*.properties`;
-  - [ ] remover `logback*.xml`.
-- [ ] Preservar recursos funcionais necessarios (ex.: `generator/**`, `messages/**`, templates e assets), incluindo os usados por readers compartilhados de dependencias.
-- [ ] Atualizar `RuntimeExtensionLoaderPathResolver` para receber caminho do overlay local em vez de URL `jar:` para `BOOT-INF/classes`.
-- [ ] Manter baseline de logging do CLI no child process.
+- [x] Implementar filtro de recursos globais no overlay:
+  - [x] remover `config/application*.yml`;
+  - [x] remover `config/application*.yaml`;
+  - [x] remover `config/application*.properties`;
+  - [x] remover `logback*.xml`.
+- [x] Preservar recursos funcionais necessarios (ex.: `generator/**`, `messages/**`, templates e assets), incluindo os usados por readers compartilhados de dependencias.
+- [x] Atualizar `RuntimeExtensionLoaderPathResolver` para receber caminho do overlay local em vez de URL `jar:` para `BOOT-INF/classes`.
+- [x] Manter baseline de logging do CLI no child process.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=Seed4JCliLauncherTest,ExtensionRuntimeBootstrapInProcessTest test`
-- [ ] Expected result: `loader.path` aponta para overlay local filtrado e saida continua limpa.
+- [x] Command: `./mvnw -Dtest=Seed4JCliLauncherTest,ExtensionRuntimeBootstrapInProcessTest test`
+- [x] Expected result: `loader.path` aponta para overlay local filtrado e saida continua limpa.
 
 #### Acceptance Criteria
 
-- [ ] `seed4j.hidden-resources` da extensao nao remove mais modulo do core em `list`.
-- [ ] Modulos da extensao continuam sendo descobertos.
-- [ ] Recursos usados por readers de dependencias da extensao permanecem acessiveis no overlay.
+- [x] `seed4j.hidden-resources` da extensao nao remove mais modulo do core em `list`.
+- [x] Modulos da extensao continuam sendo descobertos.
+- [x] Recursos usados por readers de dependencias da extensao permanecem acessiveis no overlay.
 
 ### Milestone 3 - Descoberta robusta para pacote customizado (`Start-Class`)
 
@@ -204,8 +204,8 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
@@ -288,6 +288,7 @@ Recovery:
 
 - `BOOT-INF/classes` bruto da extensao permite interferencia global mesmo sem `BOOT-INF/lib`.
 - Filtro cirurgico de recursos globais preserva contribuicoes de modulo e remove efeito colateral de runtime.
+- `loader.path` apontando para overlay local filtrado evita que `config/application*` e `logback*` da extensao alterem o runtime global do CLI.
 - O modelo hexagonal reduz acoplamento de dominio, mas nao elimina risco de classpath/config em runtime compartilhado.
 - Em `extension mode`, readers/resources de dependencias da extensao atuam globalmente no `apply` por design do contexto Spring compartilhado.
 - Para manter `loader.path` robusto, a regra principal e: CLI permanece dono da infraestrutura de runtime, e a extensao pode sobrescrever contribuicoes funcionais de `apply` de forma explicita e testada.
