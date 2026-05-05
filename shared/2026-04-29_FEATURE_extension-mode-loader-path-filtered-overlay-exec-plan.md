@@ -160,13 +160,24 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
   - [x] adicionar somente esses jars ao `loader.path` (sem trocar versoes base).
 - [ ] Adicionar validacao/fail-fast para conflitos de coordenada com versao divergente quando detectado risco de override.
   - [ ] falhar quando o proprio CLI tiver a mesma coordenada em versoes diferentes (sem depender da ordem de `Set`).
-  - [ ] falhar quando a extensao trouxer coordenada ja presente no CLI com versao diferente.
+  - [x] falhar quando a extensao trouxer coordenada ja presente no CLI com versao diferente.
+- [ ] Endurecer a identificacao de `coordenada/versao` para nomes de jar fora do padrao simples `<coordinate>-<version>.jar`.
+  - [ ] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
+  - [ ] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
+  - [ ] cobrir classifier/sufixo no nome (ex.: `my-lib-1.2.3-jdk17.jar`) evitando falso positivo de conflito.
+  - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final.
+  - [ ] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
 - [ ] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas.
 
 #### Validation
 
 - [x] Command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest,ExtensionRuntimeBootstrapInProcessTest,RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
 - [x] Expected result: casos com libs equivalentes continuam verdes; casos com libs ausentes exercitam adicionamento seletivo; entradas de `BOOT-INF/lib` que nao sao `.jar` sao ignoradas.
+- [x] Additional command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
+- [x] Additional result: ciclo RED->GREEN concluido para fail-fast quando extensao traz coordenada ja presente no CLI com versao divergente.
+- [x] Vertical checkpoint: `./mvnw -Dtest=Seed4JCliLauncherTest#shouldLaunchTheExtensionChildProcessRequestWithLoaderPathAndActiveDistributionSystemProperties test`
+- [x] Vertical result: caminho publico do launcher em extension mode segue verde com `loader.path` esperado.
+- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, versao nao numerica, classifier, uppercase, shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
 
@@ -174,6 +185,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [ ] Extensao so adiciona libs quando realmente ausentes.
 - [ ] Conflitos de versao por coordenada (interno no CLI ou entre CLI e extensao) falham com diagnostico explicito.
 - [ ] A validacao de conflitos nao depende da ordem de iteracao de `Set`.
+- [ ] Casos de naming nao padrao em `BOOT-INF/lib` possuem politica explicita e testes cobrindo falso positivo/negativo.
 
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
 
@@ -244,7 +256,11 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
   Date/Author: 2026-04-30 / Codex
 
 - Decision: Selecao de libs ausentes em `BOOT-INF/lib` compara nomes de arquivo (`*.jar`) entre extensao e CLI para compor o `loader.path` sem sobrescrever jars ja existentes.
-  Rationale: entrega comportamento aditivo minimo com cobertura de branch para entradas nao-jar; validacao de conflito por coordenada/versao permanece pendente.
+  Rationale: entrega comportamento aditivo minimo com cobertura de branch para entradas nao-jar; fail-fast para conflito entre CLI e extensao foi adicionado via heuristica de nome (`<coordinate>-<version>.jar`), e o caso de conflito interno no proprio CLI ainda permanece pendente.
+  Date/Author: 2026-05-05 / Codex
+
+- Decision: Em conflito de coordenada entre CLI e extensao com versoes divergentes, o bootstrap deve falhar antes de montar `loader.path`.
+  Rationale: evita override silencioso de runtime e torna o erro diagnostico/acaoavel durante o bootstrap.
   Date/Author: 2026-05-05 / Codex
 
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
@@ -278,6 +294,9 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Risk: Testes empacotados (`PackagedJarIT`) executarem jar stale em `target/` e mascararem regressao/falso negativo no cenario de pacote customizado.
   Mitigation: reconstruir `target/seed4j-cli-*.jar` antes da validacao empacotada e manter comando de validacao do milestone via `failsafe` no fluxo.
 
+- Risk: Heuristica de coordenada/versao por nome de arquivo (`<coordinate>-<version>.jar`) pode gerar falso positivo/negativo para jars fora do padrao.
+  Mitigation: adicionar casos de teste para nomes nao convencionais e evoluir a extracao de metadados quando houver evidencia real de conflito nao detectado.
+
 ## Validation Strategy
 
 1. Executar testes unitarios focados no bootstrap (`launcher`, `resolver`, `runtime selection`).
@@ -310,3 +329,4 @@ Recovery:
 - O milestone 1 pode ser integrado ao launcher sem mudar o `loader.path` imediatamente: materializar cache cedo reduz risco e prepara a troca de path no milestone 2.
 - `Start-Class` precisa ser validado em dois niveis: presenca no manifest e existencia do `.class` em `BOOT-INF/classes`, para falha explicita antes de subir o child process.
 - `spring.main.sources` com o `Start-Class` da extensao permite carregar contribuicoes fora de `com.seed4j...` sem alterar contrato do gerador nem scan base da aplicacao CLI.
+- O fail-fast entre CLI e extensao para coordenada com versao divergente reduz risco de override silencioso, mas ainda depende da qualidade da inferencia de nome do jar.
