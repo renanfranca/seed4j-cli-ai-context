@@ -154,17 +154,17 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 
 #### Changes
 
-- [ ] Implementar estrategia default: nao importar `BOOT-INF/lib` da extensao quando todos jars ja existem no CLI.
-- [ ] Implementar estrategia controlada para `libs ausentes`:
-  - [ ] detectar jars da extensao nao presentes no CLI;
-  - [ ] adicionar somente esses jars ao `loader.path` (sem trocar versoes base).
+- [x] Implementar estrategia default: nao importar `BOOT-INF/lib` da extensao quando todos jars ja existem no CLI.
+- [x] Implementar estrategia controlada para `libs ausentes`:
+  - [x] detectar jars da extensao nao presentes no CLI;
+  - [x] adicionar somente esses jars ao `loader.path` (sem trocar versoes base).
 - [ ] Adicionar validacao/fail-fast para conflitos de coordenada com versao divergente quando detectado risco de override.
 - [ ] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest,ExtensionRuntimeBootstrapInProcessTest test`
-- [ ] Expected result: casos com libs equivalentes continuam verdes; casos com libs ausentes exercitam adicionamento seletivo.
+- [x] Command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest,ExtensionRuntimeBootstrapInProcessTest,RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
+- [x] Expected result: casos com libs equivalentes continuam verdes; casos com libs ausentes exercitam adicionamento seletivo; entradas de `BOOT-INF/lib` que nao sao `.jar` sao ignoradas.
 
 #### Acceptance Criteria
 
@@ -208,7 +208,7 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - [x] Milestone 2 completed
 - [x] Milestone 3 started
 - [x] Milestone 3 completed
-- [ ] Milestone 4 started
+- [x] Milestone 4 started
 - [ ] Milestone 4 completed
 - [ ] Milestone 5 started
 - [ ] Milestone 5 completed
@@ -238,6 +238,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Decision: Identidade de cache do overlay usa `SHA-256(extension.jar)` com prefixo de versao de layout (`overlay-v1`).
   Rationale: permite reuso deterministico por conteudo e invalidacao controlada quando o layout do cache evoluir.
   Date/Author: 2026-04-30 / Codex
+
+- Decision: Selecao de libs ausentes em `BOOT-INF/lib` compara nomes de arquivo (`*.jar`) entre extensao e CLI para compor o `loader.path` sem sobrescrever jars ja existentes.
+  Rationale: entrega comportamento aditivo minimo com cobertura de branch para entradas nao-jar; validacao de conflito por coordenada/versao permanece pendente.
+  Date/Author: 2026-05-05 / Codex
 
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
   Rationale: evita cache parcial em falhas e garante publicacao consistente do overlay.
