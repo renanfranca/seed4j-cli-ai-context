@@ -166,7 +166,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
   - [ ] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
   - [ ] cobrir classifier/sufixo no nome (ex.: `my-lib-1.2.3-jdk17.jar`) evitando falso positivo de conflito.
   - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final.
-  - [ ] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
+  - [x] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
 - [ ] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas.
 
 #### Validation
@@ -179,7 +179,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Vertical result: caminho publico do launcher em extension mode segue verde com `loader.path` esperado.
 - [x] Additional command: `./mvnw -DskipTests clean package && ./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
 - [x] Additional result: ITs empacotados de extension mode voltaram a verde apos endurecer identidade de coordenada via `pom.properties` + fallback por nome.
-- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, versao nao numerica, classifier, uppercase, shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
+- [x] Additional result: entradas `BOOT-INF/lib/*.JAR` passam a ser tratadas como bibliotecas validas para adicao seletiva no `loader.path`.
+- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, versao nao numerica, classifier, shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
 
@@ -273,6 +274,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - Decision: Identidade de coordenada para `BOOT-INF/lib` deve priorizar `META-INF/maven/**/pom.properties` do jar aninhado (groupId:artifactId:version), com fallback para heuristica por nome quando metadados nao existirem.
   Rationale: evita falso positivo relevante quando o classpath contem mesmo `artifactId` em grupos distintos (ex.: `jackson-core` 2.x e 3.x).
+  Date/Author: 2026-05-11 / User + Codex
+
+- Decision: Descoberta de bibliotecas em `BOOT-INF/lib` deve tratar extensao de arquivo `.jar` de forma case-insensitive (ex.: `.JAR`).
+  Rationale: evita falso negativo de libs ausentes em empacotamentos com convencao nao padrao de caixa.
   Date/Author: 2026-05-11 / User + Codex
 
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
