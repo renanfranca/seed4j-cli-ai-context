@@ -165,7 +165,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
   - [ ] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
   - [x] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
   - [ ] cobrir classifier/sufixo no nome (ex.: `my-lib-1.2.3-jdk17.jar`) evitando falso positivo de conflito.
-  - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final.
+  - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final (parcial: mesma coordenada+versao nao adiciona lib ausente mesmo com nome diferente).
   - [x] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
 - [ ] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas.
 
@@ -182,7 +182,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: entradas `BOOT-INF/lib/*.JAR` passam a ser tratadas como bibliotecas validas para adicao seletiva no `loader.path`.
 - [x] Additional result: fallback por nome passou a reconhecer versao com prefixo `v` (ex.: `shared-lib-v2.0.0.jar`) para detectar conflito de versao contra o CLI.
 - [x] Additional result: fallback por nome passou a reconhecer token de versao `RELEASE` (ex.: `shared-lib-RELEASE.jar`) para detectar conflito de versao contra o CLI.
-- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, classifier, shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
+- [x] Additional result: jar renomeado na extensao nao e mais adicionado quando `pom.properties` indica mesma coordenada+versao ja presente no CLI.
+- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, classifier e cenarios adicionais de shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
 
@@ -280,6 +281,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - Decision: Descoberta de bibliotecas em `BOOT-INF/lib` deve tratar extensao de arquivo `.jar` de forma case-insensitive (ex.: `.JAR`).
   Rationale: evita falso negativo de libs ausentes em empacotamentos com convencao nao padrao de caixa.
+  Date/Author: 2026-05-11 / User + Codex
+
+- Decision: Selecao de `libs ausentes` deve priorizar identidade (`coordenada+versao`) quando disponivel e usar nome de arquivo apenas como fallback.
+  Rationale: evita adicionar jar renomeado/reempacotado quando a mesma biblioteca ja esta presente no CLI com a mesma identidade.
   Date/Author: 2026-05-11 / User + Codex
 
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
