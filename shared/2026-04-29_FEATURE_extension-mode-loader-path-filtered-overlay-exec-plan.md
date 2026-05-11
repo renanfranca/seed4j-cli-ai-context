@@ -187,6 +187,12 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] A validacao de conflitos nao depende da ordem de iteracao de `Set`.
 - [ ] Casos de naming nao padrao em `BOOT-INF/lib` possuem politica explicita e testes cobrindo falso positivo/negativo.
 
+#### Milestone 4 Learnings (2026-05-11)
+
+- `./mvnw clean verify` passou em unit tests e falhou em ITs empacotados de extension mode com `exit code = 1` apos introduzir fail-fast de conflito interno no CLI.
+- Causa observada: heuristica atual baseada apenas em nome de jar (`<coordinate>-<version>.jar`) detectou conflito interno no JAR empacotado para `jackson-core` e `jackson-databind` (`2.21.2` e `3.1.2`), embora sejam artefatos de grupos distintos no classpath efetivo.
+- Aprendizado: validar conflito apenas por `artifactId` inferido do nome do arquivo gera falso positivo relevante em runtime real; o milestone 4 precisa evoluir a identificacao de coordenada para evitar bloquear extension mode nesses cenarios.
+
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
 
 #### Goal
