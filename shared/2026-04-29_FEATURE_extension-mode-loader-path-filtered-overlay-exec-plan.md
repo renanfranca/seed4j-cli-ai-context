@@ -163,7 +163,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
   - [x] falhar quando a extensao trouxer coordenada ja presente no CLI com versao diferente.
 - [ ] Endurecer a identificacao de `coordenada/versao` para nomes de jar fora do padrao simples `<coordinate>-<version>.jar`.
   - [ ] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
-  - [ ] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`) (parcial: `v<numero>` coberto).
+  - [x] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
   - [ ] cobrir classifier/sufixo no nome (ex.: `my-lib-1.2.3-jdk17.jar`) evitando falso positivo de conflito.
   - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final.
   - [x] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
@@ -181,7 +181,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: ITs empacotados de extension mode voltaram a verde apos endurecer identidade de coordenada via `pom.properties` + fallback por nome.
 - [x] Additional result: entradas `BOOT-INF/lib/*.JAR` passam a ser tratadas como bibliotecas validas para adicao seletiva no `loader.path`.
 - [x] Additional result: fallback por nome passou a reconhecer versao com prefixo `v` (ex.: `shared-lib-v2.0.0.jar`) para detectar conflito de versao contra o CLI.
-- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, versao nao numerica, classifier, shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
+- [x] Additional result: fallback por nome passou a reconhecer token de versao `RELEASE` (ex.: `shared-lib-RELEASE.jar`) para detectar conflito de versao contra o CLI.
+- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, classifier, shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
 
