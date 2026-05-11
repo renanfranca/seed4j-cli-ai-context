@@ -177,6 +177,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: ciclo RED->GREEN concluido para fail-fast quando extensao traz coordenada ja presente no CLI com versao divergente.
 - [x] Vertical checkpoint: `./mvnw -Dtest=Seed4JCliLauncherTest#shouldLaunchTheExtensionChildProcessRequestWithLoaderPathAndActiveDistributionSystemProperties test`
 - [x] Vertical result: caminho publico do launcher em extension mode segue verde com `loader.path` esperado.
+- [x] Additional command: `./mvnw -DskipTests clean package && ./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
+- [x] Additional result: ITs empacotados de extension mode voltaram a verde apos endurecer identidade de coordenada via `pom.properties` + fallback por nome.
 - [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao, versao nao numerica, classifier, uppercase, shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
@@ -269,6 +271,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
   Rationale: evita override silencioso de runtime e torna o erro diagnostico/acaoavel durante o bootstrap.
   Date/Author: 2026-05-05 / Codex
 
+- Decision: Identidade de coordenada para `BOOT-INF/lib` deve priorizar `META-INF/maven/**/pom.properties` do jar aninhado (groupId:artifactId:version), com fallback para heuristica por nome quando metadados nao existirem.
+  Rationale: evita falso positivo relevante quando o classpath contem mesmo `artifactId` em grupos distintos (ex.: `jackson-core` 2.x e 3.x).
+  Date/Author: 2026-05-11 / User + Codex
+
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
   Rationale: evita cache parcial em falhas e garante publicacao consistente do overlay.
   Date/Author: 2026-04-30 / Codex
@@ -336,3 +342,4 @@ Recovery:
 - `Start-Class` precisa ser validado em dois niveis: presenca no manifest e existencia do `.class` em `BOOT-INF/classes`, para falha explicita antes de subir o child process.
 - `spring.main.sources` com o `Start-Class` da extensao permite carregar contribuicoes fora de `com.seed4j...` sem alterar contrato do gerador nem scan base da aplicacao CLI.
 - O fail-fast entre CLI e extensao para coordenada com versao divergente reduz risco de override silencioso, mas ainda depende da qualidade da inferencia de nome do jar.
+- A leitura de `META-INF/maven/**/pom.properties` nos jars de `BOOT-INF/lib` reduz falso positivo de conflito entre artefatos homonimos de grupos diferentes; fallback por nome deve permanecer apenas para casos sem metadados.
