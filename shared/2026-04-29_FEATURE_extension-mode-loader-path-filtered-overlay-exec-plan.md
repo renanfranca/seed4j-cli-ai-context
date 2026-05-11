@@ -162,7 +162,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
   - [x] falhar quando o proprio CLI tiver a mesma coordenada em versoes diferentes (sem depender da ordem de `Set`).
   - [x] falhar quando a extensao trouxer coordenada ja presente no CLI com versao diferente.
 - [ ] Endurecer a identificacao de `coordenada/versao` para nomes de jar fora do padrao simples `<coordinate>-<version>.jar`.
-  - [ ] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
+  - [x] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
   - [x] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
   - [x] cobrir classifier/sufixo no nome (ex.: `my-lib-1.2.3-jdk17.jar`) evitando falso positivo de conflito.
   - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final (parcial: mesma coordenada+versao nao adiciona lib ausente mesmo com nome diferente).
@@ -184,7 +184,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: fallback por nome passou a reconhecer token de versao `RELEASE` (ex.: `shared-lib-RELEASE.jar`) para detectar conflito de versao contra o CLI.
 - [x] Additional result: jar renomeado na extensao nao e mais adicionado quando `pom.properties` indica mesma coordenada+versao ja presente no CLI.
 - [x] Additional result: nomes com sufixo/classifier no fallback por nome (ex.: `shared-lib-1.0.0-jdk17.jar`) nao disparam mais conflito falso com `shared-lib-1.0.0.jar` do CLI.
-- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com matriz de nomes nao padrao (sem versao e cenarios adicionais de shaded/renamed) para provar ausencia de falso positivo/negativo relevante.
+- [x] Additional result: jars sem identidade inferivel e com mesmo nome ja presente no CLI (ex.: `bundle-all.jar`) agora falham explicitamente para evitar falso negativo silencioso.
+- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com cenarios adicionais de shaded/renamed para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
 
@@ -290,6 +291,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - Decision: Fallback de identidade por nome de jar deve ser conservador e nao inferir versao para nomes com sufixo/classifier apos token numerico (ex.: `1.0.0-jdk17`).
   Rationale: reduz falso positivo de conflito quando o nome do arquivo carrega classifier/sufixo e nao representa troca real de versao da mesma coordenada.
+  Date/Author: 2026-05-11 / User + Codex
+
+- Decision: Quando a extensao trouxer jar sem identidade inferivel e com mesmo nome de arquivo ja presente no CLI, o bootstrap deve falhar explicitamente.
+  Rationale: evita falso negativo silencioso em que a lib da extensao seria ignorada apenas por colisao de nome, sem garantia de equivalencia real.
   Date/Author: 2026-05-11 / User + Codex
 
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
