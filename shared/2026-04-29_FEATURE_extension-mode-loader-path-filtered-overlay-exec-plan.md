@@ -158,8 +158,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Implementar estrategia controlada para `libs ausentes`:
   - [x] detectar jars da extensao nao presentes no CLI;
   - [x] adicionar somente esses jars ao `loader.path` (sem trocar versoes base).
-- [ ] Adicionar validacao/fail-fast para conflitos de coordenada com versao divergente quando detectado risco de override.
-  - [ ] falhar quando o proprio CLI tiver a mesma coordenada em versoes diferentes (sem depender da ordem de `Set`).
+- [x] Adicionar validacao/fail-fast para conflitos de coordenada com versao divergente quando detectado risco de override.
+  - [x] falhar quando o proprio CLI tiver a mesma coordenada em versoes diferentes (sem depender da ordem de `Set`).
   - [x] falhar quando a extensao trouxer coordenada ja presente no CLI com versao diferente.
 - [ ] Endurecer a identificacao de `coordenada/versao` para nomes de jar fora do padrao simples `<coordinate>-<version>.jar`.
   - [ ] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
@@ -184,7 +184,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [ ] O classpath do CLI permanece fonte principal da infraestrutura.
 - [ ] Extensao so adiciona libs quando realmente ausentes.
 - [ ] Conflitos de versao por coordenada (interno no CLI ou entre CLI e extensao) falham com diagnostico explicito.
-- [ ] A validacao de conflitos nao depende da ordem de iteracao de `Set`.
+- [x] A validacao de conflitos nao depende da ordem de iteracao de `Set`.
 - [ ] Casos de naming nao padrao em `BOOT-INF/lib` possuem politica explicita e testes cobrindo falso positivo/negativo.
 
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
