@@ -94,24 +94,24 @@ Cobrir de forma direta os cenarios `MISSING`, `PRESENT` e `CONFLICT`, incluindo 
 
 #### Changes
 
-- [ ] Atualizar `src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionMissingLibrariesSelectorTest.java` com cenarios nomeados por regra de negocio (nao por ordem de execucao interna).
-- [ ] Garantir cobertura de:
+- [x] Atualizar `src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionMissingLibrariesSelectorTest.java` com cenarios nomeados por regra de negocio (nao por ordem de execucao interna).
+- [x] Garantir cobertura de:
   - identidade igual ao CLI -> `PRESENT`;
   - identidade diferente (sem conflito de coordenada/versao) -> `MISSING`;
   - mesma coordenada com versao divergente -> `CONFLICT`;
   - sem identidade e `fileName` colidindo com CLI -> `CONFLICT`;
   - sem identidade e `fileName` nao colidindo -> `MISSING`.
-- [ ] Evitar testes que assumam detalhes de implementacao (por exemplo ordem de chamadas internas), mantendo foco no contrato observavel.
+- [x] Evitar testes que assumam detalhes de implementacao (por exemplo ordem de chamadas internas), mantendo foco no contrato observavel.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest test`
-- [ ] Expected result: suite do seletor verde com regras explicitas da Opcao B.
+- [x] Command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest test`
+- [x] Expected result: suite do seletor verde com regras explicitas da Opcao B.
 
 #### Acceptance Criteria
 
-- [ ] Os testes descrevem o contrato funcional sem depender de acoplamento temporal.
-- [ ] O branch de fallback por `fileName` fica coberto por cenarios legitimos do contrato novo.
+- [x] Os testes descrevem o contrato funcional sem depender de acoplamento temporal.
+- [x] O branch de fallback por `fileName` fica coberto por cenarios legitimos do contrato novo.
 
 ### Milestone 3 - Validacao integrada com resolver e suite local
 
@@ -121,37 +121,40 @@ Garantir que a refatoracao nao alterou indevidamente o comportamento de `loader.
 
 #### Changes
 
-- [ ] Executar e ajustar, se necessario, `src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionLoaderPathResolverTest.java` para refletir o contrato final do seletor.
-- [ ] Revisar mensagens de falha esperadas nos testes integradores de dominio quando houver alteracao textual inevitavel.
-- [ ] Confirmar que nenhum trecho legado morto do seletor permaneceu apos centralizacao da decisao.
+- [x] Executar e ajustar, se necessario, `src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionLoaderPathResolverTest.java` para refletir o contrato final do seletor.
+- [x] Revisar mensagens de falha esperadas nos testes integradores de dominio quando houver alteracao textual inevitavel.
+- [x] Confirmar que nenhum trecho legado morto do seletor permaneceu apos centralizacao da decisao.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
-- [ ] Expected result: regras do seletor e montagem de `loader.path` verdes em conjunto.
-- [ ] Command: `./mvnw clean verify`
-- [ ] Expected result: validacao completa local verde (tests, coverage, checkstyle e gates do projeto).
+- [x] Command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
+- [x] Expected result: regras do seletor e montagem de `loader.path` verdes em conjunto.
+- [x] Command: `./mvnw clean verify`
+- [x] Expected result: validacao completa local verde (tests, coverage, checkstyle e gates do projeto).
 
 #### Acceptance Criteria
 
-- [ ] `loader.path` continua incluindo apenas libs realmente ausentes da extensao.
-- [ ] Cenarios de conflito continuam abortando com diagnostico claro.
-- [ ] Sem regressao no comportamento observado do `extension mode` coberto pelos testes atuais.
+- [x] `loader.path` continua incluindo apenas libs realmente ausentes da extensao.
+- [x] Cenarios de conflito continuam abortando com diagnostico claro.
+- [x] Sem regressao no comportamento observado do `extension mode` coberto pelos testes atuais.
 
 ## Progress
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
 
 Execution log:
 
 - 2026-05-12: Milestone 1 implementado com decisao centralizada por biblioteca em `RuntimeExtensionMissingLibrariesSelector`.
 - 2026-05-12: Validacao milestone 1 executada com `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest test` (verde).
 - 2026-05-12: Checkpoint vertical executado com `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest test` (verde).
+- 2026-05-12: Milestone 2 implementado com cenarios explicitos de contrato (`PRESENT`, `MISSING`, `CONFLICT`) e nomenclatura de regra de negocio em `RuntimeExtensionMissingLibrariesSelectorTest`.
+- 2026-05-12: Milestone 3 validado com `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test` (verde) e `./mvnw clean verify` (verde).
+- 2026-05-12: Durante milestone 3, ajuste de cobertura removeu branch inviavel e metodo morto residual em `RuntimeExtensionMissingLibrariesSelector`.
 
 ## Decisions
 
@@ -165,6 +168,10 @@ Execution log:
 
 - Decision: Resolver conflito no proprio item da extensao avaliado, removendo a pre-varredura global de `missing identity`.
   Rationale: elimina acoplamento temporal entre funcoes separadas e torna a causa da falha local ao item em processamento.
+  Date/Author: 2026-05-12 / Codex
+
+- Decision: Tratar biblioteca sem identidade como `MISSING` diretamente apos o guard de conflito e remover helper morto `containsFileName`.
+  Rationale: elimina branch inviavel para o Jacoco sem alterar o contrato funcional da Opcao B.
   Date/Author: 2026-05-12 / Codex
 
 ## Risks and Mitigations
@@ -204,3 +211,4 @@ Recovery:
 - A cobertura parcial no branch de fallback (`orElseGet`) sinalizou um risco real de design (acoplamento temporal), mesmo sem bug funcional imediato.
 - Regras de conflito e regra de `missing` no mesmo ponto decisor tornam o contrato mais resiliente a reordenacoes e reuso futuro.
 - Teste de regressao com dois conflitos distintos no mesmo input ajuda a detectar retorno acidental da pre-validacao global.
+- Gates estritos de linha/branch ajudam a revelar metodos residuais apos refatoracao; remover codigo morto foi necessario para manter o contrato de qualidade do projeto.
