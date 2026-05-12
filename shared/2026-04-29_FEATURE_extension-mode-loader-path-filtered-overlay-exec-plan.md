@@ -185,7 +185,9 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: jar renomeado na extensao nao e mais adicionado quando `pom.properties` indica mesma coordenada+versao ja presente no CLI.
 - [x] Additional result: nomes com sufixo/classifier no fallback por nome (ex.: `shared-lib-1.0.0-jdk17.jar`) nao disparam mais conflito falso com `shared-lib-1.0.0.jar` do CLI.
 - [x] Additional result: jars sem identidade inferivel e com mesmo nome ja presente no CLI (ex.: `bundle-all.jar`) agora falham explicitamente para evitar falso negativo silencioso.
-- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com cenarios adicionais de shaded/renamed para provar ausencia de falso positivo/negativo relevante.
+- [x] Additional command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
+- [x] Additional result: quando a extensao traz `fileName` igual ao CLI mas identidade conhecida diferente (`coordenada+versao`), a lib passa a ser tratada como ausente e adicionada seletivamente (nome de arquivo usado apenas como fallback sem identidade).
+- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com cenarios adicionais de shaded/renamed ainda nao cobertos (ex.: metadado parcial/inconsistente) para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
 
