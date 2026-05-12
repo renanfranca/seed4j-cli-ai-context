@@ -67,24 +67,24 @@ Introduzir um modelo explicito de decisao para eliminar a dependencia de ordem e
 
 #### Changes
 
-- [ ] Editar `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionMissingLibrariesSelector.java` para introduzir o conceito de decisao por biblioteca (por exemplo enum/record interno com `MISSING`, `PRESENT`, `CONFLICT`).
-- [ ] Substituir o encadeamento atual (`failWhenMissingIdentityShadowsCliLibrary` + `missingFrom`) por uma unica funcao decisora que recebe:
+- [x] Editar `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionMissingLibrariesSelector.java` para introduzir o conceito de decisao por biblioteca (por exemplo enum/record interno com `MISSING`, `PRESENT`, `CONFLICT`).
+- [x] Substituir o encadeamento atual (`failWhenMissingIdentityShadowsCliLibrary` + `missingFrom`) por uma unica funcao decisora que recebe:
   - biblioteca da extensao;
   - contexto das bibliotecas do CLI (identidades e nomes de arquivo);
   - mapa de versoes por coordenada do CLI.
-- [ ] Manter fail-fast para `CONFLICT`, mas decidido dentro da mesma funcao de avaliacao por biblioteca.
-- [ ] Preservar mensagens de erro ja consolidadas, ajustando apenas quando necessario para refletir o novo contrato.
+- [x] Manter fail-fast para `CONFLICT`, mas decidido dentro da mesma funcao de avaliacao por biblioteca.
+- [x] Preservar mensagens de erro ja consolidadas, ajustando apenas quando necessario para refletir o novo contrato.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest test`
-- [ ] Expected result: testes atuais continuam verdes ou falham apenas nos pontos onde o contrato mudou e precisa de ajuste explicito.
+- [x] Command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest test`
+- [x] Expected result: testes atuais continuam verdes ou falham apenas nos pontos onde o contrato mudou e precisa de ajuste explicito.
 
 #### Acceptance Criteria
 
-- [ ] Nao existe mais dependencia funcional entre uma pre-validacao separada e a regra de ausente.
-- [ ] Cada biblioteca da extensao tem resultado deterministico derivado de uma unica funcao decisora.
-- [ ] Conflitos continuam falhando com `InvalidRuntimeConfigurationException`.
+- [x] Nao existe mais dependencia funcional entre uma pre-validacao separada e a regra de ausente.
+- [x] Cada biblioteca da extensao tem resultado deterministico derivado de uma unica funcao decisora.
+- [x] Conflitos continuam falhando com `InvalidRuntimeConfigurationException`.
 
 ### Milestone 2 - Endurecer testes do contrato de decisao
 
@@ -140,12 +140,18 @@ Garantir que a refatoracao nao alterou indevidamente o comportamento de `loader.
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
+
+Execution log:
+
+- 2026-05-12: Milestone 1 implementado com decisao centralizada por biblioteca em `RuntimeExtensionMissingLibrariesSelector`.
+- 2026-05-12: Validacao milestone 1 executada com `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest test` (verde).
+- 2026-05-12: Checkpoint vertical executado com `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest test` (verde).
 
 ## Decisions
 
@@ -155,6 +161,10 @@ Garantir que a refatoracao nao alterou indevidamente o comportamento de `loader.
 
 - Decision: Manter semantica externa de selecao (`lista final de fileNames` e fail-fast em conflito) durante a refatoracao.
   Rationale: melhorar robustez interna sem alterar contrato publico esperado pelo `RuntimeExtensionLoaderPathResolver`.
+  Date/Author: 2026-05-12 / Codex
+
+- Decision: Resolver conflito no proprio item da extensao avaliado, removendo a pre-varredura global de `missing identity`.
+  Rationale: elimina acoplamento temporal entre funcoes separadas e torna a causa da falha local ao item em processamento.
   Date/Author: 2026-05-12 / Codex
 
 ## Risks and Mitigations
@@ -193,3 +203,4 @@ Recovery:
 
 - A cobertura parcial no branch de fallback (`orElseGet`) sinalizou um risco real de design (acoplamento temporal), mesmo sem bug funcional imediato.
 - Regras de conflito e regra de `missing` no mesmo ponto decisor tornam o contrato mais resiliente a reordenacoes e reuso futuro.
+- Teste de regressao com dois conflitos distintos no mesmo input ajuda a detectar retorno acidental da pre-validacao global.
