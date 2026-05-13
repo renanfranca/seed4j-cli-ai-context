@@ -193,6 +193,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: quando jar renomeado/shaded da extensao contem `pom.properties` incompleto (sem `groupId`/`artifactId`/`version`), o bootstrap passa a falhar explicitamente com diagnostico em vez de seguir fallback silencioso por nome.
 - [x] Additional command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest,RuntimeExtensionMissingLibrariesSelectorTest test`
 - [x] Additional result: quando jar renomeado/shaded da extensao contem multiplos `pom.properties` com identidades divergentes, o bootstrap passa a falhar explicitamente com diagnostico de metadado conflitante.
+- [x] Additional command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest,RuntimeExtensionMissingLibrariesSelectorTest test`
+- [x] Additional result: mensagem de conflito de metadado em jar renomeado/shaded passa a listar todas as identidades distintas detectadas no nested jar (nao apenas as duas primeiras), com validacao consolidada apos leitura completa.
 - [ ] Pending validation: ampliar cenarios de metadado inconsistente entre nome do arquivo e `pom.properties` (mesma lib com versao divergente entre nome e metadata) para provar precedencia e ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
