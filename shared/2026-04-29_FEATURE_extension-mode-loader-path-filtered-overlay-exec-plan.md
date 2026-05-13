@@ -169,7 +169,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
     - [x] falhar explicitamente quando jar renomeado/shaded trouxer `pom.properties` incompleto (sem `groupId`/`artifactId`/`version`) para evitar fallback silencioso por nome.
     - [x] falhar explicitamente quando jar renomeado/shaded trouxer multiplos `pom.properties` com identidades conflitantes no mesmo nested jar.
   - [x] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
-- [ ] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas.
+- [x] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas.
 
 #### Validation
 
@@ -195,6 +195,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: quando jar renomeado/shaded da extensao contem multiplos `pom.properties` com identidades divergentes, o bootstrap passa a falhar explicitamente com diagnostico de metadado conflitante.
 - [x] Additional command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest,RuntimeExtensionMissingLibrariesSelectorTest test`
 - [x] Additional result: mensagem de conflito de metadado em jar renomeado/shaded passa a listar todas as identidades distintas detectadas no nested jar (nao apenas as duas primeiras), com validacao consolidada apos leitura completa.
+- [x] Additional command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest test`
+- [x] Additional result: `RuntimeExtensionLoaderPathResolver` passa a registrar em DEBUG as libs efetivamente adicionadas ao `loader.path` (com nomes de jars) em extension mode.
 - [ ] Pending validation: ampliar cenarios de metadado inconsistente entre nome do arquivo e `pom.properties` (mesma lib com versao divergente entre nome e metadata) para provar precedencia e ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
@@ -341,8 +343,8 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Risk: Heuristica de coordenada/versao por nome de arquivo (`<coordinate>-<version>.jar`) pode gerar falso positivo/negativo para jars fora do padrao.
   Mitigation: adicionar casos de teste para nomes nao convencionais e evoluir a extracao de metadados quando houver evidencia real de conflito nao detectado.
 
-- Risk: Ainda ha um ponto de risco pendente no milestone 4: a politica de logs DEBUG das libs adicionadas e cenarios de metadado inconsistente (nome vs `pom.properties`) continuam sem cobertura final.
-  Mitigation: registrar decisao de diagnostico em DEBUG e ampliar a cobertura dos cenarios de shaded/renamed com metadados inconsistentes.
+- Risk: Ainda ha um ponto de risco pendente no milestone 4: cenarios de metadado inconsistente (nome vs `pom.properties`) continuam sem cobertura final.
+  Mitigation: ampliar a cobertura dos cenarios de shaded/renamed com metadados inconsistentes.
 
 ## Validation Strategy
 
