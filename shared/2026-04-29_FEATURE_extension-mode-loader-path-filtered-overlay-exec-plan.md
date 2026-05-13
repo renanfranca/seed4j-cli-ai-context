@@ -336,6 +336,9 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Risk: Heuristica de coordenada/versao por nome de arquivo (`<coordinate>-<version>.jar`) pode gerar falso positivo/negativo para jars fora do padrao.
   Mitigation: adicionar casos de teste para nomes nao convencionais e evoluir a extracao de metadados quando houver evidencia real de conflito nao detectado.
 
+- Risk: Ainda ha um ponto de risco pendente no milestone 4: a politica de logs DEBUG das libs adicionadas e cenarios de metadado inconsistente (nome vs `pom.properties`) continuam sem cobertura final.
+  Mitigation: registrar decisao de diagnostico em DEBUG e ampliar a cobertura dos cenarios de shaded/renamed com metadados inconsistentes.
+
 ## Validation Strategy
 
 1. Executar testes unitarios focados no bootstrap (`launcher`, `resolver`, `runtime selection`).
