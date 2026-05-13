@@ -166,6 +166,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
   - [x] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
   - [x] cobrir classifier/sufixo no nome (ex.: `my-lib-1.2.3-jdk17.jar`) evitando falso positivo de conflito.
   - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final (parcial: mesma coordenada+versao nao adiciona lib ausente mesmo com nome diferente).
+    - [x] falhar explicitamente quando jar renomeado/shaded trouxer `pom.properties` incompleto (sem `groupId`/`artifactId`/`version`) para evitar fallback silencioso por nome.
   - [x] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
 - [ ] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas.
 
@@ -187,7 +188,9 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: jars sem identidade inferivel e com mesmo nome ja presente no CLI (ex.: `bundle-all.jar`) agora falham explicitamente para evitar falso negativo silencioso.
 - [x] Additional command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
 - [x] Additional result: quando a extensao traz `fileName` igual ao CLI mas identidade conhecida diferente (`coordenada+versao`), a lib passa a ser tratada como ausente e adicionada seletivamente (nome de arquivo usado apenas como fallback sem identidade).
-- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com cenarios adicionais de shaded/renamed ainda nao cobertos (ex.: metadado parcial/inconsistente) para provar ausencia de falso positivo/negativo relevante.
+- [x] Additional command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest,RuntimeExtensionMissingLibrariesSelectorTest test`
+- [x] Additional result: quando jar renomeado/shaded da extensao contem `pom.properties` incompleto (sem `groupId`/`artifactId`/`version`), o bootstrap passa a falhar explicitamente com diagnostico em vez de seguir fallback silencioso por nome.
+- [ ] Pending validation: ampliar `RuntimeExtensionMissingLibrariesSelectorTest` com cenarios adicionais de shaded/renamed ainda nao cobertos (ex.: metadado inconsistente entre nome e metadado) para provar ausencia de falso positivo/negativo relevante.
 
 #### Acceptance Criteria
 
