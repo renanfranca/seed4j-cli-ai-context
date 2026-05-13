@@ -161,6 +161,10 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Adicionar validacao/fail-fast para conflitos de coordenada com versao divergente quando detectado risco de override.
   - [x] falhar quando o proprio CLI tiver a mesma coordenada em versoes diferentes (sem depender da ordem de `Set`).
   - [x] falhar quando a extensao trouxer coordenada ja presente no CLI com versao diferente.
+- [ ] Refinar politica de conflito de versao entre CLI e extensao (direcao da versao).
+  - [ ] quando a extensao trouxer versao mais antiga da mesma coordenada ja presente no CLI, nao fazer fail-fast; manter a lib do CLI como vencedora e registrar diagnostico em DEBUG com as duas versoes e a decisao aplicada.
+  - [ ] quando a extensao trouxer versao mais nova da mesma coordenada do CLI, manter fail-fast com mensagem explicita de conflito.
+  - [ ] quando as versoes nao forem comparaveis com seguranca (ou metadado for insuficiente), manter comportamento conservador com fail-fast explicito.
 - [ ] Endurecer a identificacao de `coordenada/versao` para nomes de jar fora do padrao simples `<coordinate>-<version>.jar`.
   - [x] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
   - [x] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
@@ -198,12 +202,15 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [ ] Pending command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest test`
 - [ ] Pending result: `RuntimeExtensionLoaderPathResolver` deve registrar em DEBUG as libs efetivamente adicionadas ao `loader.path` (com nomes de jars) em extension mode, com emissao observavel em execucoes com `--debug`.
 - [ ] Pending validation: ampliar cenarios de metadado inconsistente entre nome do arquivo e `pom.properties` (mesma lib com versao divergente entre nome e metadata) para provar precedencia e ausencia de falso positivo/negativo relevante.
+- [ ] Pending command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
+- [ ] Pending result: conflito CLI x extensao com versao mais antiga na extensao (ex.: `logback-classic` 1.5.22 na extensao vs 1.5.32 no CLI) nao deve bloquear bootstrap; `loader.path` deve manter somente a versao do CLI e emitir diagnostico DEBUG. Conflito inverso (extensao mais nova) deve continuar falhando.
+- [ ] Pending manual validation: executar `seed4j --version` com extensao real contendo versao mais antiga para confirmar ausencia de travamento e emissao de diagnostico com `--debug`.
 
 #### Acceptance Criteria
 
 - [ ] O classpath do CLI permanece fonte principal da infraestrutura.
 - [ ] Extensao so adiciona libs quando realmente ausentes.
-- [ ] Conflitos de versao por coordenada (interno no CLI ou entre CLI e extensao) falham com diagnostico explicito.
+- [ ] Conflitos de versao por coordenada seguem politica explicita: conflito interno no CLI falha; entre CLI e extensao, versao mais antiga da extensao nao bloqueia (CLI vence) e versao mais nova da extensao falha com diagnostico.
 - [x] A validacao de conflitos nao depende da ordem de iteracao de `Set`.
 - [ ] Casos de naming nao padrao em `BOOT-INF/lib` possuem politica explicita e testes cobrindo falso positivo/negativo.
 
@@ -212,6 +219,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - `./mvnw clean verify` passou em unit tests e falhou em ITs empacotados de extension mode com `exit code = 1` apos introduzir fail-fast de conflito interno no CLI.
 - Causa observada: heuristica atual baseada apenas em nome de jar (`<coordinate>-<version>.jar`) detectou conflito interno no JAR empacotado para `jackson-core` e `jackson-databind` (`2.21.2` e `3.1.2`), embora sejam artefatos de grupos distintos no classpath efetivo.
 - Aprendizado: validar conflito apenas por `artifactId` inferido do nome do arquivo gera falso positivo relevante em runtime real; o milestone 4 precisa evoluir a identificacao de coordenada para evitar bloquear extension mode nesses cenarios.
+- Aprendizado (2026-05-13): no cenario real de `seed4j --version` com extensao trazendo `ch.qos.logback:logback-classic` 1.5.22 e CLI em 1.5.32, o fail-fast atual bloqueia um caso potencialmente seguro de downgrade da extensao; o plano passa a separar downgrade (nao bloqueante, CLI vence) de upgrade (bloqueante).
 
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
 
@@ -313,6 +321,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
   Rationale: manter diagnostico detalhado sem poluir execucao padrao.
   Date/Author: 2026-05-13 / User + Codex
 
+- Decision: Conflito de versao entre CLI e extensao deve considerar direcao da divergencia (downgrade vs upgrade).
+  Rationale: quando o CLI ja possui versao mais nova da mesma coordenada, bloquear bootstrap por fail-fast impede extension mode em casos potencialmente seguros; politica passa a manter o runtime do CLI como vencedor e registrar diagnostico. Quando a extensao exigir versao mais nova que o CLI, o risco de incompatibilidade e mantido como bloqueante.
+  Date/Author: 2026-05-13 / User + Codex
+
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
   Rationale: evita cache parcial em falhas e garante publicacao consistente do overlay.
   Date/Author: 2026-04-30 / Codex
@@ -331,6 +343,9 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 - Risk: Extensao futura depender de lib nova que nao existe no CLI.
   Mitigation: estrategia de libs ausentes com inclusao seletiva e teste dedicado.
+
+- Risk: Permitir conflito nao bloqueante quando a extensao trouxer versao mais antiga pode mascarar dependencia funcional em API removida/mudada da versao mais nova carregada pelo CLI.
+  Mitigation: registrar diagnostico detalhado em DEBUG (coordenada + versoes + decisao), manter caminho bloqueante para upgrade da extensao, e incluir validacao manual com extensoes reais para coordenadas sensiveis.
 
 - Risk: `spring.main.sources` incorreto causar duplicidade de beans ou bootstrap inconsistente.
   Mitigation: injetar apenas fonte necessaria da extensao (sem duplicar `Seed4JCliApp`) e cobrir em IT empacotado.
