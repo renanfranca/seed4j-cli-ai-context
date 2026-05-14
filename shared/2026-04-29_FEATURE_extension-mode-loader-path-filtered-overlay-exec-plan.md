@@ -161,19 +161,19 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Adicionar validacao/fail-fast para conflitos de coordenada com versao divergente quando detectado risco de override.
   - [x] falhar quando o proprio CLI tiver a mesma coordenada em versoes diferentes (sem depender da ordem de `Set`).
   - [x] falhar quando a extensao trouxer coordenada ja presente no CLI com versao diferente.
-- [ ] Refinar politica de conflito de versao entre CLI e extensao (direcao da versao).
-  - [ ] quando a extensao trouxer versao mais antiga da mesma coordenada ja presente no CLI, nao fazer fail-fast; manter a lib do CLI como vencedora e registrar diagnostico em DEBUG com as duas versoes e a decisao aplicada.
-  - [ ] quando a extensao trouxer versao mais nova da mesma coordenada do CLI, manter fail-fast com mensagem explicita de conflito.
-  - [ ] quando as versoes nao forem comparaveis com seguranca (ou metadado for insuficiente), manter comportamento conservador com fail-fast explicito.
-- [ ] Endurecer a identificacao de `coordenada/versao` para nomes de jar fora do padrao simples `<coordinate>-<version>.jar`.
+- [x] Refinar politica de conflito de versao entre CLI e extensao (direcao da versao).
+  - [x] quando a extensao trouxer versao mais antiga da mesma coordenada ja presente no CLI, nao fazer fail-fast; manter a lib do CLI como vencedora e registrar diagnostico em DEBUG com as duas versoes e a decisao aplicada.
+  - [x] quando a extensao trouxer versao mais nova da mesma coordenada do CLI, manter fail-fast com mensagem explicita de conflito.
+  - [x] quando as versoes nao forem comparaveis com seguranca (ou metadado for insuficiente), manter comportamento conservador com fail-fast explicito.
+- [x] Endurecer a identificacao de `coordenada/versao` para nomes de jar fora do padrao simples `<coordinate>-<version>.jar`.
   - [x] definir politica para jars sem versao inferivel no nome (ex.: `my-lib.jar`, `bundle-all.jar`) sem falso negativo silencioso.
   - [x] cobrir versoes nao numericas no prefixo (ex.: `my-lib-v1.2.3.jar`, `my-lib-RELEASE.jar`).
   - [x] cobrir classifier/sufixo no nome (ex.: `my-lib-1.2.3-jdk17.jar`) evitando falso positivo de conflito.
-  - [ ] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final (parcial: mesma coordenada+versao nao adiciona lib ausente mesmo com nome diferente).
+  - [x] cobrir nomes renomeados por shading/relocation/custom archive name onde coordenada nao coincide com o nome final (incluindo precedencia de `pom.properties` sobre nome de arquivo e diagnostico DEBUG quando houver divergencia).
     - [x] falhar explicitamente quando jar renomeado/shaded trouxer `pom.properties` incompleto (sem `groupId`/`artifactId`/`version`) para evitar fallback silencioso por nome.
     - [x] falhar explicitamente quando jar renomeado/shaded trouxer multiplos `pom.properties` com identidades conflitantes no mesmo nested jar.
   - [x] decidir e testar comportamento para variacoes de caixa/extensao (ex.: `.JAR`) e convencoes nao padrao.
-- [ ] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas, com emissao visivel quando o CLI for executado com `--debug`.
+- [x] Registrar decisao em runtime logs de diagnostico (nivel DEBUG) sobre quais libs foram efetivamente adicionadas, com emissao visivel quando o CLI for executado com `--debug`.
 
 #### Validation
 
@@ -199,20 +199,20 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: quando jar renomeado/shaded da extensao contem multiplos `pom.properties` com identidades divergentes, o bootstrap passa a falhar explicitamente com diagnostico de metadado conflitante.
 - [x] Additional command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest,RuntimeExtensionMissingLibrariesSelectorTest test`
 - [x] Additional result: mensagem de conflito de metadado em jar renomeado/shaded passa a listar todas as identidades distintas detectadas no nested jar (nao apenas as duas primeiras), com validacao consolidada apos leitura completa.
-- [ ] Pending command: `./mvnw -Dtest=RuntimeExtensionLoaderPathResolverTest test`
-- [ ] Pending result: `RuntimeExtensionLoaderPathResolver` deve registrar em DEBUG as libs efetivamente adicionadas ao `loader.path` (com nomes de jars) em extension mode, com emissao observavel em execucoes com `--debug`.
-- [ ] Pending validation: ampliar cenarios de metadado inconsistente entre nome do arquivo e `pom.properties` (mesma lib com versao divergente entre nome e metadata) para provar precedencia e ausencia de falso positivo/negativo relevante.
-- [ ] Pending command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest test`
-- [ ] Pending result: conflito CLI x extensao com versao mais antiga na extensao (ex.: `logback-classic` 1.5.22 na extensao vs 1.5.32 no CLI) nao deve bloquear bootstrap; `loader.path` deve manter somente a versao do CLI e emitir diagnostico DEBUG. Conflito inverso (extensao mais nova) deve continuar falhando.
+- [x] Additional command: `./mvnw -Dtest=RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest,CliRuntimeLibraryIndexTest test`
+- [x] Additional result: `RuntimeExtensionLoaderPathResolver` segue emitindo em DEBUG as libs efetivamente adicionadas ao `loader.path` (com nomes de jars) em extension mode.
+- [x] Additional result: conflito CLI x extensao com versao mais antiga na extensao (ex.: `logback-classic` 1.5.22 na extensao vs 1.5.32 no CLI) nao bloqueia bootstrap; diagnostico DEBUG da decisao `CLI vence` foi adicionado e validado.
+- [x] Additional result: conflito por versoes nao comparaveis passou a falhar com mensagem explicita de diagnostico (`not safely comparable`) mantendo comportamento conservador de bloqueio.
+- [x] Additional result: quando `pom.properties` diverge da identidade inferida pelo nome do arquivo (mesma lib com versao divergente entre nome e metadata), a precedencia de `pom.properties` foi validada e o resolver passou a emitir DEBUG explicando o override.
 - [ ] Pending manual validation: executar `seed4j --version` com extensao real contendo versao mais antiga para confirmar ausencia de travamento e emissao de diagnostico com `--debug`.
 
 #### Acceptance Criteria
 
 - [ ] O classpath do CLI permanece fonte principal da infraestrutura.
 - [ ] Extensao so adiciona libs quando realmente ausentes.
-- [ ] Conflitos de versao por coordenada seguem politica explicita: conflito interno no CLI falha; entre CLI e extensao, versao mais antiga da extensao nao bloqueia (CLI vence) e versao mais nova da extensao falha com diagnostico.
+- [x] Conflitos de versao por coordenada seguem politica explicita: conflito interno no CLI falha; entre CLI e extensao, versao mais antiga da extensao nao bloqueia (CLI vence) e versao mais nova da extensao falha com diagnostico.
 - [x] A validacao de conflitos nao depende da ordem de iteracao de `Set`.
-- [ ] Casos de naming nao padrao em `BOOT-INF/lib` possuem politica explicita e testes cobrindo falso positivo/negativo.
+- [x] Casos de naming nao padrao em `BOOT-INF/lib` possuem politica explicita e testes cobrindo falso positivo/negativo.
 
 #### Milestone 4 Learnings (2026-05-11)
 
@@ -220,6 +220,9 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - Causa observada: heuristica atual baseada apenas em nome de jar (`<coordinate>-<version>.jar`) detectou conflito interno no JAR empacotado para `jackson-core` e `jackson-databind` (`2.21.2` e `3.1.2`), embora sejam artefatos de grupos distintos no classpath efetivo.
 - Aprendizado: validar conflito apenas por `artifactId` inferido do nome do arquivo gera falso positivo relevante em runtime real; o milestone 4 precisa evoluir a identificacao de coordenada para evitar bloquear extension mode nesses cenarios.
 - Aprendizado (2026-05-13): no cenario real de `seed4j --version` com extensao trazendo `ch.qos.logback:logback-classic` 1.5.22 e CLI em 1.5.32, o fail-fast atual bloqueia um caso potencialmente seguro de downgrade da extensao; o plano passa a separar downgrade (nao bloqueante, CLI vence) de upgrade (bloqueante).
+- Aprendizado (2026-05-14): manter downgrade nao bloqueante sem observabilidade reduz confianca operacional; o milestone passou a registrar em DEBUG a decisao `CLI vence` com coordenada e versoes.
+- Aprendizado (2026-05-14): conflito por versoes nao comparaveis precisava mensagem dedicada; usar texto generico de conflito dificultava diagnostico, entao o fail-fast conservador passou a explicar explicitamente que as versoes nao sao comparaveis com seguranca.
+- Aprendizado (2026-05-14): para jars renomeados/shaded, apenas aplicar precedencia de `pom.properties` nao era suficiente para suporte operacional; incluir log DEBUG quando metadata diverge do nome do arquivo torna a decisao auditavel.
 
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
 
@@ -325,6 +328,14 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
   Rationale: quando o CLI ja possui versao mais nova da mesma coordenada, bloquear bootstrap por fail-fast impede extension mode em casos potencialmente seguros; politica passa a manter o runtime do CLI como vencedor e registrar diagnostico. Quando a extensao exigir versao mais nova que o CLI, o risco de incompatibilidade e mantido como bloqueante.
   Date/Author: 2026-05-13 / User + Codex
 
+- Decision: Conflitos com versoes nao comparaveis devem permanecer bloqueantes com mensagem explicita de causa.
+  Rationale: manter fail-fast conservador sem diagnostico explicito torna triagem mais lenta; mensagem dedicada (`not safely comparable`) reduz ambiguidade operacional.
+  Date/Author: 2026-05-14 / User + Codex
+
+- Decision: Quando `pom.properties` e nome do arquivo divergem na extensao, a identidade de `pom.properties` prevalece e o bootstrap deve registrar DEBUG explicando o override.
+  Rationale: preserva semantica correta por coordenada real e torna auditavel a decisao em cenarios de jar renomeado/shaded.
+  Date/Author: 2026-05-14 / User + Codex
+
 - Decision: Materializacao do cache usa staging em `runtime/cache/.<hash>.staging-*` com `move` atomico para `<hash>`.
   Rationale: evita cache parcial em falhas e garante publicacao consistente do overlay.
   Date/Author: 2026-04-30 / Codex
@@ -362,8 +373,8 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Risk: Heuristica de coordenada/versao por nome de arquivo (`<coordinate>-<version>.jar`) pode gerar falso positivo/negativo para jars fora do padrao.
   Mitigation: adicionar casos de teste para nomes nao convencionais e evoluir a extracao de metadados quando houver evidencia real de conflito nao detectado.
 
-- Risk: Ainda ha pontos de risco pendentes no milestone 4: gating de logs DEBUG por `--debug` e cenarios de metadado inconsistente (nome vs `pom.properties`) continuam sem cobertura final.
-  Mitigation: validar o fluxo de debug no caminho publico e ampliar a cobertura dos cenarios de shaded/renamed com metadados inconsistentes.
+- Risk: Ainda ha ponto de risco pendente no milestone 4: comportamento em extensao real no caminho publico (`seed4j --version`) apos as novas regras de downgrade nao bloqueante + diagnostico DEBUG ainda nao foi revalidado manualmente.
+  Mitigation: executar validacao manual com extensao real contendo versao mais antiga e confirmar ausencia de travamento, mensagem de diagnostico e comportamento esperado com `--debug`.
 
 ## Validation Strategy
 
