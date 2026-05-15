@@ -204,6 +204,10 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Additional result: conflito CLI x extensao com versao mais antiga na extensao (ex.: `logback-classic` 1.5.22 na extensao vs 1.5.32 no CLI) nao bloqueia bootstrap; diagnostico DEBUG da decisao `CLI vence` foi adicionado e validado.
 - [x] Additional result: conflito por versoes nao comparaveis passou a falhar com mensagem explicita de diagnostico (`not safely comparable`) mantendo comportamento conservador de bloqueio.
 - [x] Additional result: quando `pom.properties` diverge da identidade inferida pelo nome do arquivo (mesma lib com versao divergente entre nome e metadata), a precedencia de `pom.properties` foi validada e o resolver passou a emitir DEBUG explicando o override.
+- [x] Additional command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest,RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest,CliRuntimeLibraryIndexTest test`
+- [x] Additional result: em extension mode com `--debug`, o launcher nao força `logging.level.root=ERROR` e publica `logging.level.com.seed4j.cli.bootstrap.domain=DEBUG`, permitindo emissao observavel dos diagnosticos de bootstrap sem alterar o baseline de execucao sem debug.
+- [x] Vertical checkpoint: `./mvnw -Dtest=Seed4JCliLauncherTest#shouldLaunchTheExtensionChildProcessRequestWithLoaderPathAndActiveDistributionSystemProperties test`
+- [x] Vertical result: caminho publico do launcher segue verde apos o ajuste de `--debug` em extension mode.
 - [ ] Pending manual validation: executar `seed4j --version` com extensao real contendo versao mais antiga para confirmar ausencia de travamento e emissao de diagnostico com `--debug`.
 
 #### Acceptance Criteria
@@ -223,6 +227,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - Aprendizado (2026-05-14): manter downgrade nao bloqueante sem observabilidade reduz confianca operacional; o milestone passou a registrar em DEBUG a decisao `CLI vence` com coordenada e versoes.
 - Aprendizado (2026-05-14): conflito por versoes nao comparaveis precisava mensagem dedicada; usar texto generico de conflito dificultava diagnostico, entao o fail-fast conservador passou a explicar explicitamente que as versoes nao sao comparaveis com seguranca.
 - Aprendizado (2026-05-14): para jars renomeados/shaded, apenas aplicar precedencia de `pom.properties` nao era suficiente para suporte operacional; incluir log DEBUG quando metadata diverge do nome do arquivo torna a decisao auditavel.
+- Aprendizado (2026-05-15): manter `logging.level.root=ERROR` de forma incondicional em extension mode anulava o valor operativo de `--debug` para o milestone 4; o launcher agora relaxa esse override no modo debug e publica nivel DEBUG apenas para o pacote de bootstrap.
 
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
 
@@ -323,6 +328,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Decision: Logs de diagnostico de libs adicionadas ao `loader.path` devem ser emitidos em nivel DEBUG e consumidos no fluxo com `--debug`.
   Rationale: manter diagnostico detalhado sem poluir execucao padrao.
   Date/Author: 2026-05-13 / User + Codex
+
+- Decision: Em extension mode, `--debug` deve relaxar o override incondicional `logging.level.root=ERROR` e habilitar DEBUG no pacote de bootstrap (`com.seed4j.cli.bootstrap.domain`).
+  Rationale: sem esse ajuste, o operador pede diagnostico com `--debug` mas os logs de decisao do milestone 4 continuam ocultos; manter o nivel DEBUG escopado evita ruido global no runtime.
+  Date/Author: 2026-05-15 / User + Codex
 
 - Decision: Conflito de versao entre CLI e extensao deve considerar direcao da divergencia (downgrade vs upgrade).
   Rationale: quando o CLI ja possui versao mais nova da mesma coordenada, bloquear bootstrap por fail-fast impede extension mode em casos potencialmente seguros; politica passa a manter o runtime do CLI como vencedor e registrar diagnostico. Quando a extensao exigir versao mais nova que o CLI, o risco de incompatibilidade e mantido como bloqueante.
