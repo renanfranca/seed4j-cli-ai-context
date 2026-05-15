@@ -260,7 +260,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 
 - [ ] M5-S1 (`list` aditivo): `extension mode` preserva catalogo do core e adiciona apenas slugs da extensao.
 - [x] M5-S2 (`apply` core sem colisao de source): modulo core (`prettier`) permanece com comportamento baseline quando a extensao nao colide com source/path do core.
-- [ ] M5-S3 (`apply` core com override de reader): modulo core (`prettier`) passa a refletir versao vinda da extensao quando houver reader de extensao para a mesma source logica (`common`).
+- [x] M5-S3 (`apply` core com override de reader): modulo core (`prettier`) passa a refletir versao vinda da extensao quando houver reader de extensao para a mesma source logica (`common`).
 - [ ] M5-S4 (`apply` core com override de resource): modulo core (`prettier`) passa a refletir template/resource da extensao quando houver colisao no mesmo path de classpath.
 - [ ] M5-S5 (`apply` modulo da extensao): modulo da extensao executa com o mesmo conjunto global de readers/resources ativo no contexto.
 - [ ] M5-S6 (`--version` regressao): saida/versionamento/logging continuam estaveis em `extension mode`.
@@ -271,7 +271,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
   - [ ] Reusar ITs existentes de `list` e `--version` como regressao obrigatoria do milestone.
   - [ ] Adicionar IT empacotado dedicado para `apply` em `extension mode` cobrindo:
     - [x] cenario de controle sem colisao de source/path do core;
-    - [ ] cenario com colisao explicita de source (`COMMON`) para reader de Node;
+    - [x] cenario com colisao explicita de source (`COMMON`) para reader de Node;
     - [ ] cenario com colisao explicita de resource/template em path usado pelo core.
   - [x] Garantir fixture de extensao dedicada no `seed4j-cli` (sem depender de alteracoes no `seed4j` ou no `seed4j-sample-extension`) para manter testes deterministicos.
   - [ ] Validar `apply` de modulo da extensao usando o mesmo runtime global ativo.
@@ -293,6 +293,10 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [ ] Expected result: `target/seed4j-cli-*.jar` reconstruido antes dos ITs empacotados.
 - [ ] Command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT,ExtensionRuntimeBootstrapApplyPackagedJarIT failsafe:integration-test failsafe:verify`
 - [ ] Expected result: cenarios M5-S1..M5-S6 verdes no caminho publico empacotado.
+- [x] Additional command: `./mvnw test-compile failsafe:integration-test failsafe:verify -Dit.test=ExtensionRuntimeBootstrapApplyPackagedJarIT`
+- [x] Additional result: cenarios M5-S2 e M5-S3 verdes em IT empacotado dedicado de `apply` (controle sem colisao + colisao explicita em `COMMON`).
+- [x] Vertical checkpoint command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
+- [x] Vertical checkpoint result: regressao de caminho publico (`list` e `--version` empacotados) permaneceu verde apos introduzir reader de override `COMMON`.
 - [ ] Command: `./mvnw clean verify`
 - [ ] Expected result: build verde completo com cobertura/checkstyle.
 - [ ] Command: `npm run prettier:check`
@@ -318,6 +322,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Milestone 4 completed
 - [x] Milestone 5 started
 - [x] Milestone 5 cycle 1 completed (M5-S2 control path in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
+- [x] Milestone 5 cycle 2 completed (M5-S3 `COMMON` source override in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
 - [ ] Milestone 5 completed
 
 ## Decisions
@@ -345,6 +350,10 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - Decision: Override de versoes de dependencias do core via extensao exige sobreposicao da mesma identidade logica consumida pelo core (mesma source/chave), nao apenas reader adicional com source custom.
   Rationale: no fluxo de merge de readers (`NodePackagesVersions`/`JavaDependenciesVersions`), somente colisoes da mesma chave logica podem alterar o resultado observado pelos modulos do core; source custom em namespace proprio nao substitui `COMMON`.
   Date/Author: 2026-05-15 / User + Codex
+
+- Decision: No cenario de teste empacotado para M5-S3, o override de `COMMON` sera exercitado por reader de extensao dedicado com `@Order(HIGHEST_PRECEDENCE)` e retorno parcial de `NodePackagesVersions` (apenas o pacote colidido).
+  Rationale: garante colisao real no mesmo source logico com mudanca observavel no `apply prettier` sem depender de templates externos ou de alteracoes no repo `seed4j`.
+  Date/Author: 2026-05-15 / Codex
 
 - Decision: Identidade de cache do overlay usa `SHA-256(extension.jar)` com prefixo de versao de layout (`overlay-v1`).
   Rationale: permite reuso deterministico por conteudo e invalidacao controlada quando o layout do cache evoluir.
@@ -481,3 +490,4 @@ Recovery:
 - A leitura de `META-INF/maven/**/pom.properties` nos jars de `BOOT-INF/lib` reduz falso positivo de conflito entre artefatos homonimos de grupos diferentes; fallback por nome deve permanecer apenas para casos sem metadados.
 - Para override de dependencias no `apply`, reader adicional da extensao com source custom nao altera modulo do core que consulta `COMMON`; a sobreposicao precisa ocorrer na mesma identidade logica.
 - Cenario de controle de `apply prettier` em extension mode ficou mais robusto quando comparado contra baseline de `standard mode` no mesmo caminho empacotado, evitando hardcode de versoes de dependencias no teste.
+- O ciclo M5-S3 confirmou no caminho empacotado que colisao explicita em `COMMON` altera apenas o pacote sobreposto (`prettier`) e preserva o restante das dependencias do core via merge global de readers.
