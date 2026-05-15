@@ -245,20 +245,54 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 
 #### Goal
 
-Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
+Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) e roteiro operacional claro, explicitando o contrato final de override global no `apply`.
+
+#### Scope Clarification
+
+- O comportamento de override global no `apply` depende de sobreposicao real no runtime compartilhado (core + extensao), nao apenas da presenca de um modulo extra.
+- Para versoes de Node/Java, sobreposicao significa usar a mesma identidade logica de source/chave usada pelo core.
+  - Exemplo Node: para afetar modulos do core que consultam `COMMON`, a extensao precisa publicar reader para a mesma source logica (`common`), com precedencia aplicavel.
+- Para templates/resources, sobreposicao significa colisao no mesmo path de classpath consumido pelo core.
+  - Exemplo: `/generator/prettier/.prettierrc.mustache`.
+- O `seed4j-sample-extension` como referencia externa e util para padroes de implementacao, mas seu source de Node default (`seed4j-sample-extension`) nao colide com `COMMON` do core; portanto nao prova override do core sem fixture dedicada.
+
+#### Test Matrix (Milestone 5)
+
+- [ ] M5-S1 (`list` aditivo): `extension mode` preserva catalogo do core e adiciona apenas slugs da extensao.
+- [ ] M5-S2 (`apply` core sem colisao de source): modulo core (`prettier`) permanece com comportamento baseline quando a extensao nao colide com source/path do core.
+- [ ] M5-S3 (`apply` core com override de reader): modulo core (`prettier`) passa a refletir versao vinda da extensao quando houver reader de extensao para a mesma source logica (`common`).
+- [ ] M5-S4 (`apply` core com override de resource): modulo core (`prettier`) passa a refletir template/resource da extensao quando houver colisao no mesmo path de classpath.
+- [ ] M5-S5 (`apply` modulo da extensao): modulo da extensao executa com o mesmo conjunto global de readers/resources ativo no contexto.
+- [ ] M5-S6 (`--version` regressao): saida/versionamento/logging continuam estaveis em `extension mode`.
 
 #### Changes
 
-- [ ] Adicionar/atualizar ITs empacotados para provar:
-  - [ ] `list` aditivo (core intacto + slugs da extensao);
-  - [ ] `apply` de modulo do core refletindo override de readers/resources da extensao quando houver sobreposicao;
-  - [ ] `apply` de modulo da extensao funcional com o mesmo conjunto global de readers/resources;
-  - [ ] `--version` sem regressao de logging/versao.
-- [ ] Atualizar documentacao de extension mode no repo `seed4j-cli` para refletir overlay filtrado + politica de libs.
-- [ ] Registrar exemplos de falha com mensagens esperadas.
+- [ ] Adicionar/atualizar ITs empacotados para cobrir a matriz M5-S1..M5-S6.
+  - [ ] Reusar ITs existentes de `list` e `--version` como regressao obrigatoria do milestone.
+  - [ ] Adicionar IT empacotado dedicado para `apply` em `extension mode` cobrindo:
+    - [ ] cenario de controle sem colisao de source/path do core;
+    - [ ] cenario com colisao explicita de source (`COMMON`) para reader de Node;
+    - [ ] cenario com colisao explicita de resource/template em path usado pelo core.
+  - [ ] Garantir fixture de extensao dedicada no `seed4j-cli` (sem depender de alteracoes no `seed4j` ou no `seed4j-sample-extension`) para manter testes deterministicos.
+  - [ ] Validar `apply` de modulo da extensao usando o mesmo runtime global ativo.
+- [ ] Atualizar `documentation/Commands.md` (somente) com o contrato final:
+  - [ ] `list` continua aditivo em `extension mode`;
+  - [ ] `apply` compartilha readers/resources globais entre core e extensao;
+  - [ ] override de dependencia do core exige sobreposicao da mesma source logica (nao basta source custom);
+  - [ ] override de template/resource exige colisao no mesmo path de classpath;
+  - [ ] politica final de `BOOT-INF/lib` (CLI vence downgrade, fail-fast em upgrade e nao-comparavel).
+- [ ] Registrar exemplos de falha com mensagens esperadas, incluindo ao menos:
+  - [ ] jar de extensao invalido sem `BOOT-INF/classes`;
+  - [ ] conflito de metadata de biblioteca (`pom.properties` incompleto/conflitante);
+  - [ ] conflito bloqueante de versao quando extensao exige versao mais nova;
+  - [ ] conflito bloqueante por versoes nao comparaveis com seguranca.
 
 #### Validation
 
+- [ ] Command: `./mvnw -DskipTests clean package`
+- [ ] Expected result: `target/seed4j-cli-*.jar` reconstruido antes dos ITs empacotados.
+- [ ] Command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT,ExtensionRuntimeBootstrapApplyPackagedJarIT failsafe:integration-test failsafe:verify`
+- [ ] Expected result: cenarios M5-S1..M5-S6 verdes no caminho publico empacotado.
 - [ ] Command: `./mvnw clean verify`
 - [ ] Expected result: build verde completo com cobertura/checkstyle.
 - [ ] Command: `npm run prettier:check`
@@ -266,9 +300,11 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 
 #### Acceptance Criteria
 
-- [ ] Mudanca validada com testes e cenario manual reproduzivel.
-- [ ] Documentacao operacional alinhada ao comportamento final.
-- [ ] Contrato de override global no `apply` explicitado e validado.
+- [ ] Mudanca validada com testes empacotados e cenario manual reproduzivel.
+- [ ] Documentacao operacional em `documentation/Commands.md` alinhada ao comportamento final.
+- [ ] Contrato de override global no `apply` explicitado e validado com cenarios positivo e controle:
+  - [ ] sem sobreposicao de source/path do core, comportamento do core nao muda;
+  - [ ] com sobreposicao explicita, `apply` do core e da extensao refletem o runtime global compartilhado.
 
 ## Progress
 
@@ -304,6 +340,10 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Decision: Override global de readers/resources da extensao no `apply` e comportamento esperado em `extension mode`.
   Rationale: o contexto Spring e compartilhado (core + extensao), e a resolucao de dependencias usa colecoes ordenadas + merge; o plano deve assumir esse contrato e testa-lo explicitamente.
   Date/Author: 2026-04-30 / User + Codex
+
+- Decision: Override de versoes de dependencias do core via extensao exige sobreposicao da mesma identidade logica consumida pelo core (mesma source/chave), nao apenas reader adicional com source custom.
+  Rationale: no fluxo de merge de readers (`NodePackagesVersions`/`JavaDependenciesVersions`), somente colisoes da mesma chave logica podem alterar o resultado observado pelos modulos do core; source custom em namespace proprio nao substitui `COMMON`.
+  Date/Author: 2026-05-15 / User + Codex
 
 - Decision: Identidade de cache do overlay usa `SHA-256(extension.jar)` com prefixo de versao de layout (`overlay-v1`).
   Rationale: permite reuso deterministico por conteudo e invalidacao controlada quando o layout do cache evoluir.
@@ -377,6 +417,9 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - Risk: Override global da extensao alterar versoes/dependencias de modulos do core de forma nao intencional.
   Mitigation: adicionar IT dedicado de sobreposicao explicita (mesma chave/source) + documentar contrato operacional do `apply` em extension mode.
 
+- Risk: Confundir source custom da extensao com sobreposicao real de source do core gerar falso positivo de cobertura no milestone 5.
+  Mitigation: incluir cenario de controle (sem colisao) e cenario positivo (com colisao explicita em `COMMON`) nos ITs empacotados de `apply`.
+
 - Risk: Extensao futura depender de lib nova que nao existe no CLI.
   Mitigation: estrategia de libs ausentes com inclusao seletiva e teste dedicado.
 
@@ -435,3 +478,4 @@ Recovery:
 - `spring.main.sources` com o `Start-Class` da extensao permite carregar contribuicoes fora de `com.seed4j...` sem alterar contrato do gerador nem scan base da aplicacao CLI.
 - O fail-fast entre CLI e extensao para coordenada com versao divergente reduz risco de override silencioso, mas ainda depende da qualidade da inferencia de nome do jar.
 - A leitura de `META-INF/maven/**/pom.properties` nos jars de `BOOT-INF/lib` reduz falso positivo de conflito entre artefatos homonimos de grupos diferentes; fallback por nome deve permanecer apenas para casos sem metadados.
+- Para override de dependencias no `apply`, reader adicional da extensao com source custom nao altera modulo do core que consulta `COMMON`; a sobreposicao precisa ocorrer na mesma identidade logica.
