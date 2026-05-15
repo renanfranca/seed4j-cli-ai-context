@@ -259,7 +259,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 #### Test Matrix (Milestone 5)
 
 - [ ] M5-S1 (`list` aditivo): `extension mode` preserva catalogo do core e adiciona apenas slugs da extensao.
-- [ ] M5-S2 (`apply` core sem colisao de source): modulo core (`prettier`) permanece com comportamento baseline quando a extensao nao colide com source/path do core.
+- [x] M5-S2 (`apply` core sem colisao de source): modulo core (`prettier`) permanece com comportamento baseline quando a extensao nao colide com source/path do core.
 - [ ] M5-S3 (`apply` core com override de reader): modulo core (`prettier`) passa a refletir versao vinda da extensao quando houver reader de extensao para a mesma source logica (`common`).
 - [ ] M5-S4 (`apply` core com override de resource): modulo core (`prettier`) passa a refletir template/resource da extensao quando houver colisao no mesmo path de classpath.
 - [ ] M5-S5 (`apply` modulo da extensao): modulo da extensao executa com o mesmo conjunto global de readers/resources ativo no contexto.
@@ -270,10 +270,10 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [ ] Adicionar/atualizar ITs empacotados para cobrir a matriz M5-S1..M5-S6.
   - [ ] Reusar ITs existentes de `list` e `--version` como regressao obrigatoria do milestone.
   - [ ] Adicionar IT empacotado dedicado para `apply` em `extension mode` cobrindo:
-    - [ ] cenario de controle sem colisao de source/path do core;
+    - [x] cenario de controle sem colisao de source/path do core;
     - [ ] cenario com colisao explicita de source (`COMMON`) para reader de Node;
     - [ ] cenario com colisao explicita de resource/template em path usado pelo core.
-  - [ ] Garantir fixture de extensao dedicada no `seed4j-cli` (sem depender de alteracoes no `seed4j` ou no `seed4j-sample-extension`) para manter testes deterministicos.
+  - [x] Garantir fixture de extensao dedicada no `seed4j-cli` (sem depender de alteracoes no `seed4j` ou no `seed4j-sample-extension`) para manter testes deterministicos.
   - [ ] Validar `apply` de modulo da extensao usando o mesmo runtime global ativo.
 - [ ] Atualizar `documentation/Commands.md` (somente) com o contrato final:
   - [ ] `list` continua aditivo em `extension mode`;
@@ -303,7 +303,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [ ] Mudanca validada com testes empacotados e cenario manual reproduzivel.
 - [ ] Documentacao operacional em `documentation/Commands.md` alinhada ao comportamento final.
 - [ ] Contrato de override global no `apply` explicitado e validado com cenarios positivo e controle:
-  - [ ] sem sobreposicao de source/path do core, comportamento do core nao muda;
+  - [x] sem sobreposicao de source/path do core, comportamento do core nao muda;
   - [ ] com sobreposicao explicita, `apply` do core e da extensao refletem o runtime global compartilhado.
 
 ## Progress
@@ -316,7 +316,8 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Milestone 3 completed
 - [x] Milestone 4 started
 - [x] Milestone 4 completed
-- [ ] Milestone 5 started
+- [x] Milestone 5 started
+- [x] Milestone 5 cycle 1 completed (M5-S2 control path in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
 - [ ] Milestone 5 completed
 
 ## Decisions
@@ -479,3 +480,4 @@ Recovery:
 - O fail-fast entre CLI e extensao para coordenada com versao divergente reduz risco de override silencioso, mas ainda depende da qualidade da inferencia de nome do jar.
 - A leitura de `META-INF/maven/**/pom.properties` nos jars de `BOOT-INF/lib` reduz falso positivo de conflito entre artefatos homonimos de grupos diferentes; fallback por nome deve permanecer apenas para casos sem metadados.
 - Para override de dependencias no `apply`, reader adicional da extensao com source custom nao altera modulo do core que consulta `COMMON`; a sobreposicao precisa ocorrer na mesma identidade logica.
+- Cenario de controle de `apply prettier` em extension mode ficou mais robusto quando comparado contra baseline de `standard mode` no mesmo caminho empacotado, evitando hardcode de versoes de dependencias no teste.
