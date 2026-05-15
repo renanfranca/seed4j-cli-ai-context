@@ -213,12 +213,16 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Vertical checkpoint: `./mvnw -Dtest=Seed4JCliLauncherTest#shouldLaunchTheExtensionChildProcessRequestWithLoaderPathAndActiveDistributionSystemProperties test`
 - [x] Vertical result: caminho publico do launcher permaneceu verde apos suportar `--debug=true`.
 - [x] Additional result: requisito do milestone foi explicitamente reduzido para `--debug` (token literal); suporte a `--debug=true` nao faz parte do contrato funcional.
-- [ ] Pending manual validation: executar `seed4j --version` com extensao real contendo versao mais antiga para confirmar ausencia de travamento e emissao de diagnostico com `--debug`.
+- [x] Additional command: `seed4j --version --debug`
+- [x] Additional result: validacao manual real com extensao ativa contendo versoes mais antigas confirmou ausencia de travamento (`exit code 0`) e emissao observavel dos diagnosticos DEBUG de bootstrap (`Keeping CLI runtime library ...` + diagnostico de `loader.path`).
+- [x] Additional result: comparacao de versao foi ajustada para tratar igualdade textual nao numerica e versoes qualificadas com mesmo sufixo (ex.: `7.2.0.Final` vs `7.2.12.Final`), removendo falso bloqueio conservador indevido no caminho publico.
+- [x] Additional result: em extension mode com `--debug`, os diagnosticos de bootstrap do processo pai passaram a ser habilitados explicitamente para o pacote `com.seed4j.cli.bootstrap.domain` antes da resolucao de runtime.
+- [x] Pending manual validation: executar `seed4j --version` com extensao real contendo versao mais antiga para confirmar ausencia de travamento e emissao de diagnostico com `--debug`.
 
 #### Acceptance Criteria
 
-- [ ] O classpath do CLI permanece fonte principal da infraestrutura.
-- [ ] Extensao so adiciona libs quando realmente ausentes.
+- [x] O classpath do CLI permanece fonte principal da infraestrutura.
+- [x] Extensao so adiciona libs quando realmente ausentes.
 - [x] Conflitos de versao por coordenada seguem politica explicita: conflito interno no CLI falha; entre CLI e extensao, versao mais antiga da extensao nao bloqueia (CLI vence) e versao mais nova da extensao falha com diagnostico.
 - [x] A validacao de conflitos nao depende da ordem de iteracao de `Set`.
 - [x] Casos de naming nao padrao em `BOOT-INF/lib` possuem politica explicita e testes cobrindo falso positivo/negativo.
@@ -234,6 +238,8 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - Aprendizado (2026-05-14): para jars renomeados/shaded, apenas aplicar precedencia de `pom.properties` nao era suficiente para suporte operacional; incluir log DEBUG quando metadata diverge do nome do arquivo torna a decisao auditavel.
 - Aprendizado (2026-05-15): manter `logging.level.root=ERROR` de forma incondicional em extension mode anulava o valor operativo de `--debug` para o milestone 4; o launcher agora relaxa esse override no modo debug e publica nivel DEBUG apenas para o pacote de bootstrap.
 - Aprendizado (2026-05-15): suporte a `--debug=true` foi validado apenas de forma exploratoria e depois descartado como requisito do milestone; o contrato permanece em `--debug` literal.
+- Aprendizado (2026-05-15): validar `--debug` apenas via system properties do child process nao foi suficiente para observabilidade real; os logs de decisao de libs acontecem no processo pai e precisaram habilitacao explicita de DEBUG nesse processo para ficarem visiveis.
+- Aprendizado (2026-05-15): comparador estritamente numerico gerava falso conflito em versoes qualificadas com mesmo sufixo (ex.: `hibernate-core` `7.2.0.Final` vs `7.2.12.Final`); politica foi ajustada para comparar prefixo numerico quando o qualificador e igual, mantendo bloqueio conservador para casos de qualificadores divergentes/ambiguous.
 
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
 
@@ -273,7 +279,7 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
 - [x] Milestone 3 started
 - [x] Milestone 3 completed
 - [x] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 4 completed
 - [ ] Milestone 5 started
 - [ ] Milestone 5 completed
 
