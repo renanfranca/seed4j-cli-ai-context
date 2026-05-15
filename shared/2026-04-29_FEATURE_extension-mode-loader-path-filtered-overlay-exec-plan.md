@@ -209,9 +209,10 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - [x] Vertical checkpoint: `./mvnw -Dtest=Seed4JCliLauncherTest#shouldLaunchTheExtensionChildProcessRequestWithLoaderPathAndActiveDistributionSystemProperties test`
 - [x] Vertical result: caminho publico do launcher segue verde apos o ajuste de `--debug` em extension mode.
 - [x] Additional command: `./mvnw -Dtest=RuntimeSelectionTest,Seed4JCliLauncherTest,RuntimeExtensionMissingLibrariesSelectorTest,RuntimeExtensionLoaderPathResolverTest,CliRuntimeLibraryIndexTest test`
-- [x] Additional result: em extension mode, `--debug=true` passou a ser tratado como debug ativo no launcher, aplicando o mesmo relaxamento de `logging.level.root=ERROR` e mantendo DEBUG escopado para `com.seed4j.cli.bootstrap.domain`.
+- [x] Additional result: validacao exploratoria mostrou que `--debug=true` pode ser tratado como debug ativo no launcher, aplicando o mesmo relaxamento de `logging.level.root=ERROR` e mantendo DEBUG escopado para `com.seed4j.cli.bootstrap.domain`.
 - [x] Vertical checkpoint: `./mvnw -Dtest=Seed4JCliLauncherTest#shouldLaunchTheExtensionChildProcessRequestWithLoaderPathAndActiveDistributionSystemProperties test`
 - [x] Vertical result: caminho publico do launcher permaneceu verde apos suportar `--debug=true`.
+- [x] Additional result: requisito do milestone foi explicitamente reduzido para `--debug` (token literal); suporte a `--debug=true` nao faz parte do contrato funcional.
 - [ ] Pending manual validation: executar `seed4j --version` com extensao real contendo versao mais antiga para confirmar ausencia de travamento e emissao de diagnostico com `--debug`.
 
 #### Acceptance Criteria
@@ -232,7 +233,7 @@ Definir e implementar politica segura para bibliotecas da extensao mantendo `loa
 - Aprendizado (2026-05-14): conflito por versoes nao comparaveis precisava mensagem dedicada; usar texto generico de conflito dificultava diagnostico, entao o fail-fast conservador passou a explicar explicitamente que as versoes nao sao comparaveis com seguranca.
 - Aprendizado (2026-05-14): para jars renomeados/shaded, apenas aplicar precedencia de `pom.properties` nao era suficiente para suporte operacional; incluir log DEBUG quando metadata diverge do nome do arquivo torna a decisao auditavel.
 - Aprendizado (2026-05-15): manter `logging.level.root=ERROR` de forma incondicional em extension mode anulava o valor operativo de `--debug` para o milestone 4; o launcher agora relaxa esse override no modo debug e publica nivel DEBUG apenas para o pacote de bootstrap.
-- Aprendizado (2026-05-15): limitar o reconhecimento de debug ao token literal `--debug` era fragil; suportar tambem `--debug=true` evita perda de diagnostico por variacao de sintaxe no argumento.
+- Aprendizado (2026-05-15): suporte a `--debug=true` foi validado apenas de forma exploratoria e depois descartado como requisito do milestone; o contrato permanece em `--debug` literal.
 
 ### Milestone 5 - Regressao funcional fim-a-fim + documentacao
 
@@ -338,9 +339,9 @@ Fechar a mudanca com cobertura automatizada e roteiro operacional claro.
   Rationale: sem esse ajuste, o operador pede diagnostico com `--debug` mas os logs de decisao do milestone 4 continuam ocultos; manter o nivel DEBUG escopado evita ruido global no runtime.
   Date/Author: 2026-05-15 / User + Codex
 
-- Decision: O gating de debug em extension mode deve considerar tanto `--debug` quanto `--debug=true`.
-  Rationale: ambos representam intencao explicita de modo debug no caminho de CLI; tratar apenas a flag literal cria inconsistencia operacional e pode ocultar diagnostico quando o argumento e passado como propriedade booleana.
-  Date/Author: 2026-05-15 / User + Codex
+- Decision: O contrato funcional do milestone para diagnostico em debug considera apenas `--debug` (token literal); `--debug=true` foi descartado como requisito.
+  Rationale: decisao explicita de escopo para manter o milestone focado no caminho operacional acordado e evitar ampliar superficie de suporte sem necessidade de produto.
+  Date/Author: 2026-05-15 / User
 
 - Decision: Conflito de versao entre CLI e extensao deve considerar direcao da divergencia (downgrade vs upgrade).
   Rationale: quando o CLI ja possui versao mais nova da mesma coordenada, bloquear bootstrap por fail-fast impede extension mode em casos potencialmente seguros; politica passa a manter o runtime do CLI como vencedor e registrar diagnostico. Quando a extensao exigir versao mais nova que o CLI, o risco de incompatibilidade e mantido como bloqueante.
