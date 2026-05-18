@@ -258,17 +258,17 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 
 #### Test Matrix (Milestone 5)
 
-- [ ] M5-S1 (`list` aditivo): `extension mode` preserva catalogo do core e adiciona apenas slugs da extensao.
+- [x] M5-S1 (`list` aditivo): `extension mode` preserva catalogo do core e adiciona apenas slugs da extensao.
 - [x] M5-S2 (`apply` core sem colisao de source): modulo core (`prettier`) permanece com comportamento baseline quando a extensao nao colide com source/path do core.
 - [x] M5-S3 (`apply` core com override de reader): modulo core (`prettier`) passa a refletir versao vinda da extensao quando houver reader de extensao para a mesma source logica (`common`).
 - [x] M5-S4 (`apply` core com override de resource): modulo core (`prettier`) passa a refletir template/resource da extensao quando houver colisao no mesmo path de classpath.
 - [x] M5-S5 (`apply` modulo da extensao): modulo da extensao executa com o mesmo conjunto global de readers/resources ativo no contexto.
-- [ ] M5-S6 (`--version` regressao): saida/versionamento/logging continuam estaveis em `extension mode`.
+- [x] M5-S6 (`--version` regressao): saida/versionamento/logging continuam estaveis em `extension mode`.
 
 #### Changes
 
-- [ ] Adicionar/atualizar ITs empacotados para cobrir a matriz M5-S1..M5-S6.
-  - [ ] Reusar ITs existentes de `list` e `--version` como regressao obrigatoria do milestone.
+- [x] Adicionar/atualizar ITs empacotados para cobrir a matriz M5-S1..M5-S6.
+  - [x] Reusar ITs existentes de `list` e `--version` como regressao obrigatoria do milestone.
   - [ ] Adicionar IT empacotado dedicado para `apply` em `extension mode` cobrindo:
     - [x] cenario de controle sem colisao de source/path do core;
     - [x] cenario com colisao explicita de source (`COMMON`) para reader de Node;
@@ -297,8 +297,10 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Additional result: cenarios M5-S2 e M5-S3 verdes em IT empacotado dedicado de `apply` (controle sem colisao + colisao explicita em `COMMON`).
 - [x] Additional result: cenario M5-S4 verde em IT empacotado dedicado de `apply` com colisao explicita de template em `/generator/prettier/.prettierrc.mustache`.
 - [x] Additional result: cenario M5-S5 verde em IT empacotado dedicado de `apply`; modulo da extensao (`runtime-extension-apply-shared-context`) refletiu runtime global compartilhado (override de `COMMON` e template).
+- [x] Additional command: `./mvnw test-compile failsafe:integration-test failsafe:verify -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT`
+- [x] Additional result: cenario M5-S6 verde em IT empacotado de `--version`, incluindo assercao explicita de ausencia dos markers de logging/config da extensao (`[EXT-APPLICATION-OVERRIDE]` e `[EXT-LOGBACK-OVERRIDE]`).
 - [x] Vertical checkpoint command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
-- [x] Vertical checkpoint result: regressao de caminho publico (`list` e `--version` empacotados) permaneceu verde apos introduzir reader de override `COMMON`.
+- [x] Vertical checkpoint result: regressao de caminho publico (`list` e `--version` empacotados) permaneceu verde apos introduzir reader de override `COMMON` e apos fechar M5-S6.
 - [ ] Command: `./mvnw clean verify`
 - [ ] Expected result: build verde completo com cobertura/checkstyle.
 - [ ] Command: `npm run prettier:check`
@@ -327,6 +329,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Milestone 5 cycle 2 completed (M5-S3 `COMMON` source override in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
 - [x] Milestone 5 cycle 3 completed (M5-S4 resource/template override collision in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
 - [x] Milestone 5 cycle 4 completed (M5-S5 extension module apply with shared global runtime overrides)
+- [x] Milestone 5 cycle 5 completed (M5-S6 `--version` regression assertions in `ExtensionRuntimeBootstrapPackagedJarIT`)
 - [ ] Milestone 5 completed
 
 ## Decisions
