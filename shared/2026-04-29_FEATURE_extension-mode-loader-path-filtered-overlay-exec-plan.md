@@ -262,7 +262,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] M5-S2 (`apply` core sem colisao de source): modulo core (`prettier`) permanece com comportamento baseline quando a extensao nao colide com source/path do core.
 - [x] M5-S3 (`apply` core com override de reader): modulo core (`prettier`) passa a refletir versao vinda da extensao quando houver reader de extensao para a mesma source logica (`common`).
 - [x] M5-S4 (`apply` core com override de resource): modulo core (`prettier`) passa a refletir template/resource da extensao quando houver colisao no mesmo path de classpath.
-- [ ] M5-S5 (`apply` modulo da extensao): modulo da extensao executa com o mesmo conjunto global de readers/resources ativo no contexto.
+- [x] M5-S5 (`apply` modulo da extensao): modulo da extensao executa com o mesmo conjunto global de readers/resources ativo no contexto.
 - [ ] M5-S6 (`--version` regressao): saida/versionamento/logging continuam estaveis em `extension mode`.
 
 #### Changes
@@ -274,7 +274,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
     - [x] cenario com colisao explicita de source (`COMMON`) para reader de Node;
     - [x] cenario com colisao explicita de resource/template em path usado pelo core.
   - [x] Garantir fixture de extensao dedicada no `seed4j-cli` (sem depender de alteracoes no `seed4j` ou no `seed4j-sample-extension`) para manter testes deterministicos.
-  - [ ] Validar `apply` de modulo da extensao usando o mesmo runtime global ativo.
+  - [x] Validar `apply` de modulo da extensao usando o mesmo runtime global ativo.
 - [ ] Atualizar `documentation/Commands.md` (somente) com o contrato final:
   - [ ] `list` continua aditivo em `extension mode`;
   - [ ] `apply` compartilha readers/resources globais entre core e extensao;
@@ -296,6 +296,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Additional command: `./mvnw test-compile failsafe:integration-test failsafe:verify -Dit.test=ExtensionRuntimeBootstrapApplyPackagedJarIT`
 - [x] Additional result: cenarios M5-S2 e M5-S3 verdes em IT empacotado dedicado de `apply` (controle sem colisao + colisao explicita em `COMMON`).
 - [x] Additional result: cenario M5-S4 verde em IT empacotado dedicado de `apply` com colisao explicita de template em `/generator/prettier/.prettierrc.mustache`.
+- [x] Additional result: cenario M5-S5 verde em IT empacotado dedicado de `apply`; modulo da extensao (`runtime-extension-apply-shared-context`) refletiu runtime global compartilhado (override de `COMMON` e template).
 - [x] Vertical checkpoint command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
 - [x] Vertical checkpoint result: regressao de caminho publico (`list` e `--version` empacotados) permaneceu verde apos introduzir reader de override `COMMON`.
 - [ ] Command: `./mvnw clean verify`
@@ -309,7 +310,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [ ] Documentacao operacional em `documentation/Commands.md` alinhada ao comportamento final.
 - [ ] Contrato de override global no `apply` explicitado e validado com cenarios positivo e controle:
   - [x] sem sobreposicao de source/path do core, comportamento do core nao muda;
-  - [ ] com sobreposicao explicita, `apply` do core e da extensao refletem o runtime global compartilhado.
+  - [x] com sobreposicao explicita, `apply` do core e da extensao refletem o runtime global compartilhado.
 
 ## Progress
 
@@ -325,6 +326,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Milestone 5 cycle 1 completed (M5-S2 control path in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
 - [x] Milestone 5 cycle 2 completed (M5-S3 `COMMON` source override in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
 - [x] Milestone 5 cycle 3 completed (M5-S4 resource/template override collision in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
+- [x] Milestone 5 cycle 4 completed (M5-S5 extension module apply with shared global runtime overrides)
 - [ ] Milestone 5 completed
 
 ## Decisions
@@ -360,6 +362,10 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - Decision: No cenario de teste empacotado para M5-S4, a colisao de resource/template sera exercitada no mesmo path do core (`/generator/prettier/.prettierrc.mustache`) com marcador exclusivo para assercao observavel.
   Rationale: valida override real por classpath collision no caminho consumido pelo `apply prettier`, evitando falso positivo por alteracoes indiretas.
   Date/Author: 2026-05-15 / Codex
+
+- Decision: O modulo de extensao de M5-S5 deve ser testado sem `--base-name`/`--project-name`, respeitando o contrato `withoutProperties()` do comando.
+  Rationale: reaproveitar helper genérico com flags extras gerou falso negativo (`Unknown options`) sem relacao com o runtime global; o teste passou a usar harness dedicado para o slug da extensao.
+  Date/Author: 2026-05-18 / Codex
 
 - Decision: Identidade de cache do overlay usa `SHA-256(extension.jar)` com prefixo de versao de layout (`overlay-v1`).
   Rationale: permite reuso deterministico por conteudo e invalidacao controlada quando o layout do cache evoluir.
@@ -498,3 +504,5 @@ Recovery:
 - Cenario de controle de `apply prettier` em extension mode ficou mais robusto quando comparado contra baseline de `standard mode` no mesmo caminho empacotado, evitando hardcode de versoes de dependencias no teste.
 - O ciclo M5-S3 confirmou no caminho empacotado que colisao explicita em `COMMON` altera apenas o pacote sobreposto (`prettier`) e preserva o restante das dependencias do core via merge global de readers.
 - O ciclo M5-S4 confirmou no caminho empacotado que colisao no mesmo path de template (`generator/prettier/.prettierrc.mustache`) e suficiente para alterar o artefato final do `apply` do modulo core.
+- O ciclo M5-S5 confirmou no caminho empacotado que modulo da extensao tambem consome o mesmo runtime global compartilhado: override de reader (`COMMON`) e override de template impactaram o `apply` do slug da extensao.
+- ITs empacotados dependem de `target/seed4j-cli-*.jar` presente; executar apenas `failsafe` sem etapa previa de `package` pode gerar falha ambiental (nao funcional) no `packagedCliJar()`.
