@@ -275,17 +275,17 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
     - [x] cenario com colisao explicita de resource/template em path usado pelo core.
   - [x] Garantir fixture de extensao dedicada no `seed4j-cli` (sem depender de alteracoes no `seed4j` ou no `seed4j-sample-extension`) para manter testes deterministicos.
   - [x] Validar `apply` de modulo da extensao usando o mesmo runtime global ativo.
-- [ ] Atualizar `documentation/Commands.md` (somente) com o contrato final:
-  - [ ] `list` continua aditivo em `extension mode`;
-  - [ ] `apply` compartilha readers/resources globais entre core e extensao;
-  - [ ] override de dependencia do core exige sobreposicao da mesma source logica (nao basta source custom);
-  - [ ] override de template/resource exige colisao no mesmo path de classpath;
-  - [ ] politica final de `BOOT-INF/lib` (CLI vence downgrade, fail-fast em upgrade e nao-comparavel).
-- [ ] Registrar exemplos de falha com mensagens esperadas, incluindo ao menos:
-  - [ ] jar de extensao invalido sem `BOOT-INF/classes`;
-  - [ ] conflito de metadata de biblioteca (`pom.properties` incompleto/conflitante);
-  - [ ] conflito bloqueante de versao quando extensao exige versao mais nova;
-  - [ ] conflito bloqueante por versoes nao comparaveis com seguranca.
+- [x] Atualizar `documentation/Commands.md` (somente) com o contrato final:
+  - [x] `list` continua aditivo em `extension mode`;
+  - [x] `apply` compartilha readers/resources globais entre core e extensao;
+  - [x] override de dependencia do core exige sobreposicao da mesma source logica (nao basta source custom);
+  - [x] override de template/resource exige colisao no mesmo path de classpath;
+  - [x] politica final de `BOOT-INF/lib` (CLI vence downgrade, fail-fast em upgrade e nao-comparavel).
+- [x] Registrar exemplos de falha com mensagens esperadas, incluindo ao menos:
+  - [x] jar de extensao invalido sem `BOOT-INF/classes`;
+  - [x] conflito de metadata de biblioteca (`pom.properties` incompleto/conflitante);
+  - [x] conflito bloqueante de versao quando extensao exige versao mais nova;
+  - [x] conflito bloqueante por versoes nao comparaveis com seguranca.
 
 #### Validation
 
@@ -309,7 +309,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 #### Acceptance Criteria
 
 - [ ] Mudanca validada com testes empacotados e cenario manual reproduzivel.
-- [ ] Documentacao operacional em `documentation/Commands.md` alinhada ao comportamento final.
+- [x] Documentacao operacional em `documentation/Commands.md` alinhada ao comportamento final.
 - [ ] Contrato de override global no `apply` explicitado e validado com cenarios positivo e controle:
   - [x] sem sobreposicao de source/path do core, comportamento do core nao muda;
   - [x] com sobreposicao explicita, `apply` do core e da extensao refletem o runtime global compartilhado.
@@ -333,6 +333,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Milestone 5 cycle 6 completed (M5-S6 `--version` remains free from Spring banner/startup noise in packaged path)
 - [x] Milestone 5 cycle 7 completed (M5-S6 `--version` keeps runtime/distribution lines stable with regression overrides)
 - [x] Milestone 5 cycle 8 completed (M5-S6 `--version` keeps CLI/Seed4J version values aligned with `standard mode`)
+- [x] Milestone 5 cycle 9 completed (documentation contract and fail-fast examples updated in `documentation/Commands.md`)
 - [ ] Milestone 5 completed
 
 ## Decisions
