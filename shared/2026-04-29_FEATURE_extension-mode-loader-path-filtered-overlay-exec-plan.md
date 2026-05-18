@@ -298,7 +298,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Additional result: cenario M5-S4 verde em IT empacotado dedicado de `apply` com colisao explicita de template em `/generator/prettier/.prettierrc.mustache`.
 - [x] Additional result: cenario M5-S5 verde em IT empacotado dedicado de `apply`; modulo da extensao (`runtime-extension-apply-shared-context`) refletiu runtime global compartilhado (override de `COMMON` e template).
 - [x] Additional command: `./mvnw test-compile failsafe:integration-test failsafe:verify -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT`
-- [x] Additional result: cenario M5-S6 verde em IT empacotado de `--version`, incluindo assercao explicita de ausencia dos markers de logging/config da extensao (`[EXT-APPLICATION-OVERRIDE]` e `[EXT-LOGBACK-OVERRIDE]`).
+- [x] Additional result: cenario M5-S6 verde em IT empacotado de `--version`, incluindo assercao explicita de ausencia dos markers de logging/config da extensao (`[EXT-APPLICATION-OVERRIDE]` e `[EXT-LOGBACK-OVERRIDE]`) e de ruido de bootstrap (` :: Spring Boot :: ` e `Starting Seed4JCliApp`).
 - [x] Vertical checkpoint command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
 - [x] Vertical checkpoint result: regressao de caminho publico (`list` e `--version` empacotados) permaneceu verde apos introduzir reader de override `COMMON` e apos fechar M5-S6.
 - [ ] Command: `./mvnw clean verify`
@@ -330,6 +330,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Milestone 5 cycle 3 completed (M5-S4 resource/template override collision in `ExtensionRuntimeBootstrapApplyPackagedJarIT`)
 - [x] Milestone 5 cycle 4 completed (M5-S5 extension module apply with shared global runtime overrides)
 - [x] Milestone 5 cycle 5 completed (M5-S6 `--version` regression assertions in `ExtensionRuntimeBootstrapPackagedJarIT`)
+- [x] Milestone 5 cycle 6 completed (M5-S6 `--version` remains free from Spring banner/startup noise in packaged path)
 - [ ] Milestone 5 completed
 
 ## Decisions
