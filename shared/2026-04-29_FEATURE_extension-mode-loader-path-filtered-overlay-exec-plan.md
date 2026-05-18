@@ -298,7 +298,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Additional result: cenario M5-S4 verde em IT empacotado dedicado de `apply` com colisao explicita de template em `/generator/prettier/.prettierrc.mustache`.
 - [x] Additional result: cenario M5-S5 verde em IT empacotado dedicado de `apply`; modulo da extensao (`runtime-extension-apply-shared-context`) refletiu runtime global compartilhado (override de `COMMON` e template).
 - [x] Additional command: `./mvnw test-compile failsafe:integration-test failsafe:verify -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT`
-- [x] Additional result: cenario M5-S6 verde em IT empacotado de `--version`, incluindo assercao explicita de ausencia dos markers de logging/config da extensao (`[EXT-APPLICATION-OVERRIDE]` e `[EXT-LOGBACK-OVERRIDE]`), de ruido de bootstrap (` :: Spring Boot :: ` e `Starting Seed4JCliApp`) e estabilidade das linhas de runtime/distribution (`extension`, `company-extension`, `1.0.0`).
+- [x] Additional result: cenario M5-S6 verde em IT empacotado de `--version`, incluindo assercao explicita de ausencia dos markers de logging/config da extensao (`[EXT-APPLICATION-OVERRIDE]` e `[EXT-LOGBACK-OVERRIDE]`), de ruido de bootstrap (` :: Spring Boot :: ` e `Starting Seed4JCliApp`), estabilidade das linhas de runtime/distribution (`extension`, `company-extension`, `1.0.0`) e estabilidade dos valores de versao (`Seed4J CLI` e `Seed4J version`) comparados ao `standard mode`.
 - [x] Vertical checkpoint command: `./mvnw -Dit.test=ExtensionRuntimeBootstrapPackagedJarIT,ExtensionRuntimeBootstrapListPackagedJarIT failsafe:integration-test failsafe:verify`
 - [x] Vertical checkpoint result: regressao de caminho publico (`list` e `--version` empacotados) permaneceu verde apos introduzir reader de override `COMMON`, apos fechar M5-S6 e apos reforcar assercoes de runtime/distribution.
 - [ ] Command: `./mvnw clean verify`
@@ -332,6 +332,7 @@ Fechar a mudanca com cobertura automatizada de caminho publico (`packaged jar`) 
 - [x] Milestone 5 cycle 5 completed (M5-S6 `--version` regression assertions in `ExtensionRuntimeBootstrapPackagedJarIT`)
 - [x] Milestone 5 cycle 6 completed (M5-S6 `--version` remains free from Spring banner/startup noise in packaged path)
 - [x] Milestone 5 cycle 7 completed (M5-S6 `--version` keeps runtime/distribution lines stable with regression overrides)
+- [x] Milestone 5 cycle 8 completed (M5-S6 `--version` keeps CLI/Seed4J version values aligned with `standard mode`)
 - [ ] Milestone 5 completed
 
 ## Decisions
