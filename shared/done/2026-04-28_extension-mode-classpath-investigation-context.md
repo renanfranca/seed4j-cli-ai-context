@@ -8,7 +8,7 @@ Autor: AI agent (este chat)
 
 Este arquivo começou como registro da regressão (`vnull` + warnings de Logback) e foi atualizado com o que **já está resolvido no projeto**.
 
-Com base no ExecPlan [`BUG_EXTENSION_MODE_VERSION_NULL_AND_LOGBACK_WARN_EXEC_PLAN.md`](./BUG_EXTENSION_MODE_VERSION_NULL_AND_LOGBACK_WARN_EXEC_PLAN.md) e no código atual, os dois sintomas principais estão fechados.
+Com base no ExecPlan [`BUG_EXTENSION_MODE_VERSION_NULL_AND_LOGBACK_WARN_EXEC_PLAN.md`](done/BUG_EXTENSION_MODE_VERSION_NULL_AND_LOGBACK_WARN_EXEC_PLAN.md) e no código atual, os dois sintomas principais estão fechados.
 
 ## Regressão histórica (estado investigado antes da correção)
 
