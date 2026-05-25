@@ -143,8 +143,8 @@ Atualizar contrato público e garantir que pipeline local continua íntegro.
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
@@ -210,3 +210,5 @@ Atualizar contrato público e garantir que pipeline local continua íntegro.
 - O contrato atual já opera em “slot único ativo”; tratar MVP como automação desse contrato evita superdesign.
 - A ordem das mutações importa: validar primeiro, habilitar `mode: extension` apenas no caminho de sucesso.
 - Mesmo com sobrescrita sem `--force`, UX precisa transparência explícita de replace para evitar erro operacional.
+- Reusar `RuntimeModeConfigReader` e `RuntimeExtensionJarLayoutValidator` no instalador elimina divergência semântica entre bootstrap e instalação.
+- Escrita com arquivo temporário + `move` com `REPLACE_EXISTING` (e fallback sem `ATOMIC_MOVE`) mantém atualização de runtime/config defensiva em diferentes file systems.
