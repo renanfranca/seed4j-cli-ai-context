@@ -64,26 +64,26 @@ Introduzir tipos/serviços de domínio para habilitar e desabilitar mode com val
 
 #### Changes
 
-- [ ] Criar serviços de domínio em `src/main/java/com/seed4j/cli/bootstrap/domain` para:
-- [ ] habilitar `extension mode` com validação de runtime extension instalado;
-- [ ] desabilitar para `standard mode` sem validar artefatos de extensão.
-- [ ] Reusar `RuntimeModeConfigReader` para validar e carregar `config.yml`.
-- [ ] Reusar `RuntimeSelection.resolve(...)` + `RuntimeExtensionConfiguration.withDefaultPaths(...)` para validação de enable.
-- [ ] Gravar `config.yml` preservando demais chaves válidas e alterando apenas `seed4j.runtime.mode`.
-- [ ] Garantir criação de `config.yml` em `disable` quando ausente.
+- [x] Criar serviços de domínio em `src/main/java/com/seed4j/cli/bootstrap/domain` para:
+- [x] habilitar `extension mode` com validação de runtime extension instalado;
+- [x] desabilitar para `standard mode` sem validar artefatos de extensão.
+- [x] Reusar `RuntimeModeConfigReader` para validar e carregar `config.yml`.
+- [x] Reusar `RuntimeSelection.resolve(...)` + `RuntimeExtensionConfiguration.withDefaultPaths(...)` para validação de enable.
+- [x] Gravar `config.yml` preservando demais chaves válidas e alterando apenas `seed4j.runtime.mode`.
+- [x] Garantir criação de `config.yml` em `disable` quando ausente.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test`
-- [ ] Expected result: testes de domínio passam cobrindo sucesso, config inválido, e validação de artefatos no enable.
+- [x] Command: `./mvnw -Dtest=RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test`
+- [x] Expected result: testes de domínio passam cobrindo sucesso, config inválido, e validação de artefatos no enable.
 
 #### Acceptance Criteria
 
-- [ ] Enable falha com exit de erro quando runtime extension ativo não é válido.
-- [ ] Enable grava `mode: extension` quando runtime ativo é válido.
-- [ ] Disable grava `mode: standard` e não apaga runtime artifacts.
-- [ ] Disable cria `config.yml` quando não existe.
-- [ ] Config inválido continua fail-fast (sem autocorreção).
+- [x] Enable falha com exit de erro quando runtime extension ativo não é válido.
+- [x] Enable grava `mode: extension` quando runtime ativo é válido.
+- [x] Disable grava `mode: standard` e não apaga runtime artifacts.
+- [x] Disable cria `config.yml` quando não existe.
+- [x] Config inválido continua fail-fast (sem autocorreção).
 
 ### Milestone 2 - Comandos CLI `extension enable` e `extension disable`
 
@@ -141,8 +141,8 @@ Atualizar contrato público e consolidar comportamento MVP decidido.
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
@@ -164,6 +164,10 @@ Atualizar contrato público e consolidar comportamento MVP decidido.
 
 - Decision: se `config.yml` estiver inválido, manter fail-fast com mensagem clara.
   Rationale: manter semântica atual e evitar autocorreção implícita.
+  Date/Author: 2026-05-26 / Renan + Codex
+
+- Decision: em `enable`, validar `config.yml` antes de validar artefatos de runtime quando ambos estão inválidos.
+  Rationale: priorizar mensagem de configuração inválida e manter alinhamento com o fail-fast já praticado no launcher.
   Date/Author: 2026-05-26 / Renan + Codex
 
 - Decision: `disable` cria `config.yml` quando ausente com `mode: standard`.
@@ -211,3 +215,5 @@ Atualizar contrato público e consolidar comportamento MVP decidido.
 - Limitar MVP a contratos explícitos reduz risco de superdesign no bootstrap.
 - Comandos de modo (`enable/disable`) precisam semântica de validação distinta para evitar ambiguidades.
 - O principal risco funcional fica na expectativa de "recovery automático"; isso deve ser alinhado por documentação clara.
+- Extrair um writer compartilhado para `seed4j.runtime.mode` evitou drift entre `enable` e `disable` durante o TDD.
+- Tornar explícita a prioridade de erro de `config.yml` evitou ambiguidade quando o estado de runtime também está inválido.
