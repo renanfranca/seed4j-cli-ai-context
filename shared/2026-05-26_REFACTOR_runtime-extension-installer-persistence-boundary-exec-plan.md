@@ -57,21 +57,21 @@ Definir contratos de persistência para o fluxo de instalação sem acoplamento 
 
 #### Changes
 
-- [ ] Criar interfaces no domínio para o fluxo do installer:
+- [x] Criar interfaces no domínio para o fluxo do installer:
   - `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeModeConfigurationRepository.java`
   - `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionArtifactsRepository.java`
-- [ ] Atualizar `RuntimeExtensionInstaller` para depender dessas interfaces via construtor explícito.
-- [ ] Manter `RuntimeExtensionJarLayoutValidator` e tipos de request/resultado no domínio.
+- [x] Atualizar `RuntimeExtensionInstaller` para depender dessas interfaces via construtor explícito.
+- [x] Manter `RuntimeExtensionJarLayoutValidator` e tipos de request/resultado no domínio.
 
 #### Validation
 
-- [ ] Comando: `./mvnw -Dtest=RuntimeExtensionInstallerTest test`
-- [ ] Resultado esperado: testes do installer compilam e passam com novo contrato.
+- [x] Comando: `./mvnw -Dtest=RuntimeExtensionInstallerTest test`
+- [x] Resultado esperado: testes do installer compilam e passam com novo contrato.
 
 #### Acceptance Criteria
 
-- [ ] `RuntimeExtensionInstaller` não usa `Files`, `Yaml`, `StandardCopyOption` diretamente.
-- [ ] Fluxo de instalação permanece semanticamente igual para sucesso/erro já cobertos.
+- [x] `RuntimeExtensionInstaller` não usa `Files`, `Yaml`, `StandardCopyOption` diretamente.
+- [x] Fluxo de instalação permanece semanticamente igual para sucesso/erro já cobertos.
 
 ### Milestone 2 - Implementar adapters secondary e wiring do comando
 
@@ -123,8 +123,8 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
@@ -147,6 +147,10 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 - Decision: Critério de aceite deste plano é escopo estrito installer (full `verify` pode permanecer com falhas preexistentes fora do escopo).
   Rationale: Decisão explícita de escopo para evitar expansão não planejada.
   Date/Author: 2026-05-26 / Renan + Codex
+
+- Decision: Introduzir implementações filesystem default no domínio (`RuntimeModeConfigurationFileSystemRepository`, `RuntimeExtensionArtifactsFileSystemRepository`) como passo transitório para manter o command path sem alteração no Milestone 1.
+  Rationale: Permitir injeção explícita de boundaries no installer sem antecipar o wiring do comando previsto para o Milestone 2.
+  Date/Author: 2026-05-26 / Codex
 
 ## Risks and Mitigations
 
@@ -184,3 +188,4 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 
 - Separar apenas o fluxo produtivo (`installer`) acelera entrega, mas exige registrar dívida técnica explicitamente para não normalizar exceções arquiteturais.
 - Em projeto com cobertura por classe estrita, “escopo funcional” e “gate de qualidade global” podem divergir; essa divergência precisa ficar formalizada no plano para evitar ruído operacional.
+- Injeção explícita de boundary no construtor do installer permitiu validar orquestração via teste sem depender de I/O real, enquanto o caminho público do comando permaneceu estável.
