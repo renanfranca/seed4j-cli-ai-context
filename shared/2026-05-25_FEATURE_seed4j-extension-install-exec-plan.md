@@ -145,8 +145,8 @@ Atualizar contrato público e garantir que pipeline local continua íntegro.
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 
@@ -212,3 +212,4 @@ Atualizar contrato público e garantir que pipeline local continua íntegro.
 - Mesmo com sobrescrita sem `--force`, UX precisa transparência explícita de replace para evitar erro operacional.
 - Reusar `RuntimeModeConfigReader` e `RuntimeExtensionJarLayoutValidator` no instalador elimina divergência semântica entre bootstrap e instalação.
 - Escrita com arquivo temporário + `move` com `REPLACE_EXISTING` (e fallback sem `ATOMIC_MOVE`) mantém atualização de runtime/config defensiva em diferentes file systems.
+- O `CliFixture` precisa registrar novos comandos raiz para evitar divergência entre árvore de comandos testada e árvore montada por componentes no runtime real.
