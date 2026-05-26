@@ -81,21 +81,21 @@ Mover I/O real do installer para infraestrutura secondary com wiring explícito 
 
 #### Changes
 
-- [ ] Adicionar implementações filesystem:
+- [x] Adicionar implementações filesystem:
   - `src/main/java/com/seed4j/cli/bootstrap/infrastructure/secondary/FileSystemRuntimeModeConfigurationRepository.java`
   - `src/main/java/com/seed4j/cli/bootstrap/infrastructure/secondary/FileSystemRuntimeExtensionArtifactsRepository.java`
-- [ ] Atualizar `src/main/java/com/seed4j/cli/command/infrastructure/primary/ExtensionInstallCommand.java` para instanciar o installer com essas implementações.
-- [ ] Garantir preservação de mensagens/erros de `InvalidRuntimeConfigurationException` já esperadas pelos testes existentes.
+- [x] Atualizar `src/main/java/com/seed4j/cli/command/infrastructure/primary/ExtensionInstallCommand.java` para instanciar o installer com essas implementações.
+- [x] Garantir preservação de mensagens/erros de `InvalidRuntimeConfigurationException` já esperadas pelos testes existentes.
 
 #### Validation
 
-- [ ] Comando: `./mvnw -Dtest=RuntimeExtensionInstallerTest test`
-- [ ] Resultado esperado: mesmos cenários de install (create/overwrite/failure) continuam verdes.
+- [x] Comando: `./mvnw -Dtest=RuntimeExtensionInstallerTest test`
+- [x] Resultado esperado: mesmos cenários de install (create/overwrite/failure) continuam verdes.
 
 #### Acceptance Criteria
 
-- [ ] I/O do installer está encapsulado nos adapters secondary.
-- [ ] O comando `extension install` continua funcional sem alteração de contrato CLI.
+- [x] I/O do installer está encapsulado nos adapters secondary.
+- [x] O comando `extension install` continua funcional sem alteração de contrato CLI.
 
 ### Milestone 3 - Consolidar testes e registrar dívida do próximo slice
 
@@ -125,8 +125,8 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 
@@ -148,8 +148,12 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
   Rationale: Decisão explícita de escopo para evitar expansão não planejada.
   Date/Author: 2026-05-26 / Renan + Codex
 
-- Decision: Introduzir implementações filesystem default no domínio (`RuntimeModeConfigurationFileSystemRepository`, `RuntimeExtensionArtifactsFileSystemRepository`) como passo transitório para manter o command path sem alteração no Milestone 1.
-  Rationale: Permitir injeção explícita de boundaries no installer sem antecipar o wiring do comando previsto para o Milestone 2.
+- Decision: Remover o construtor de conveniência `RuntimeExtensionInstaller(Path)` no Milestone 2 e manter composição explícita do comando com adapters secondary.
+  Rationale: Evitar wiring de I/O dentro do domínio e garantir boundary de persistência operacional no path público `extension install`.
+  Date/Author: 2026-05-26 / Codex
+
+- Decision: Expor um construtor público do installer com 3 parâmetros (`userHome`, `RuntimeModeConfigurationRepository`, `RuntimeExtensionArtifactsRepository`) e manter o `RuntimeExtensionJarLayoutValidator` como detalhe interno.
+  Rationale: Preservar encapsulamento do validador (package-private) sem forçar dependência do command a tipos internos do domínio.
   Date/Author: 2026-05-26 / Codex
 
 ## Risks and Mitigations
@@ -189,3 +193,4 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 - Separar apenas o fluxo produtivo (`installer`) acelera entrega, mas exige registrar dívida técnica explicitamente para não normalizar exceções arquiteturais.
 - Em projeto com cobertura por classe estrita, “escopo funcional” e “gate de qualidade global” podem divergir; essa divergência precisa ficar formalizada no plano para evitar ruído operacional.
 - Injeção explícita de boundary no construtor do installer permitiu validar orquestração via teste sem depender de I/O real, enquanto o caminho público do comando permaneceu estável.
+- Remover construtor de conveniência cedo no slice torna desvios arquiteturais visíveis imediatamente (quebra de compilação no command), reduzindo risco de boundary incompleto passar despercebido.
