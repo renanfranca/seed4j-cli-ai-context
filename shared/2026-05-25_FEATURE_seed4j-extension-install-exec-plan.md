@@ -11,6 +11,7 @@ O resultado observável será executar `seed4j extension install ...` com sucess
 ## Scope
 
 In-scope:
+
 - Novo comando CLI: `seed4j extension install <jar> --distribution-id <id> --distribution-version <version>`.
 - Sobrescrita da extensão ativa sem `--force`.
 - Criação de `~/.config/seed4j-cli/config.yml` quando não existir.
@@ -18,6 +19,7 @@ In-scope:
 - Atualização de documentação do fluxo de extensão.
 
 Out-of-scope:
+
 - Repositório de múltiplas versões de extensão.
 - Download remoto de artefatos.
 - Assinatura/verificação criptográfica de JAR.
@@ -147,8 +149,8 @@ Atualizar contrato público e garantir que pipeline local continua íntegro.
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
 
 ## Decisions
 
@@ -213,3 +215,4 @@ Atualizar contrato público e garantir que pipeline local continua íntegro.
 - Reusar `RuntimeModeConfigReader` e `RuntimeExtensionJarLayoutValidator` no instalador elimina divergência semântica entre bootstrap e instalação.
 - Escrita com arquivo temporário + `move` com `REPLACE_EXISTING` (e fallback sem `ATOMIC_MOVE`) mantém atualização de runtime/config defensiva em diferentes file systems.
 - O `CliFixture` precisa registrar novos comandos raiz para evitar divergência entre árvore de comandos testada e árvore montada por componentes no runtime real.
+- `npm run prettier:check` varre também `_temporary/**`; alterações de documentação em ExecPlans podem exigir formatação desses arquivos para manter o pipeline verde.
