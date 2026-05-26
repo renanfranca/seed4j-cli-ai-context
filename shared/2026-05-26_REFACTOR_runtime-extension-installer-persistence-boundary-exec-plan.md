@@ -45,7 +45,7 @@ Fora de escopo (neste plano):
 - Operações de filesystem e persistência de config usadas pelo installer ficam em `bootstrap/infrastructure/secondary`.
 - `ExtensionInstallCommand` compõe o caso de uso com adapters secondary concretos.
 - Testes do installer seguem verdes, sem regressão de comportamento observável.
-- Diferenças de cobertura fora do escopo (enabler/disabler) ficam registradas como dívida explícita para próximo ExecPlan.
+- Diferenças de cobertura fora do escopo (`RuntimeExtensionModeEnabler`, `RuntimeExtensionModeDisabler`, `RuntimeModeConfigurationWriter`) ficam registradas como dívida explícita para próximo ExecPlan.
 
 ## Milestones
 
@@ -105,21 +105,21 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 
 #### Changes
 
-- [ ] Ajustar testes do installer se necessário para novo construtor/wiring.
-- [ ] Registrar no ExecPlan a dívida explícita: refactor de `enabler/disabler` e estratégia final de cobertura de branches não determinísticos.
-- [ ] Não alterar ainda `RuntimeExtensionModeEnabler/Disabler`.
+- [x] Avaliar ajuste dos testes do installer para novo construtor/wiring; testes existentes permaneceram válidos e foi adicionado reforço no path público do comando (`ExtensionInstallCommandTest`) para persistência de `config.yml`, `extension.jar` e `metadata.yml`.
+- [x] Registrar no ExecPlan a dívida explícita: refactor de `enabler/disabler`, cobertura de `RuntimeModeConfigurationWriter` e estratégia final de cobertura de branches não determinísticos.
+- [x] Não alterar ainda `RuntimeExtensionModeEnabler/Disabler`.
 
 #### Validation
 
-- [ ] Comando: `./mvnw -Dtest=RuntimeExtensionInstallerTest test`
-- [ ] Resultado esperado: verde.
-- [ ] Comando (observacional, não gate deste slice): `./mvnw clean verify`
-- [ ] Resultado esperado: pode manter falhas preexistentes fora do escopo (enabler/disabler), sem novas regressões atribuíveis ao installer.
+- [x] Comando: `./mvnw -Dtest=RuntimeExtensionInstallerTest test`
+- [x] Resultado: verde (9 testes, 0 falhas).
+- [x] Comando (observacional, não gate deste slice): `./mvnw clean verify`
+- [x] Resultado: falha esperada no gate global de cobertura por classes fora do escopo do installer (`RuntimeExtensionModeEnabler`, `RuntimeExtensionModeDisabler`, `RuntimeModeConfigurationWriter`), sem regressão nos testes do installer/command.
 
 #### Acceptance Criteria
 
-- [ ] Slice installer entregue com boundary + secondary operacional.
-- [ ] Próximo passo fica claramente definido e rastreável.
+- [x] Slice installer entregue com boundary + secondary operacional.
+- [x] Próximo passo fica claramente definido e rastreável.
 
 ## Progress
 
@@ -127,8 +127,8 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
 
 ## Decisions
 
@@ -156,6 +156,10 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
   Rationale: Preservar encapsulamento do validador (package-private) sem forçar dependência do command a tipos internos do domínio.
   Date/Author: 2026-05-26 / Codex
 
+- Decision: Consolidar o milestone 3 com reforço de teste no path público (`ExtensionInstallCommandTest`) em vez de alterar o domínio novamente.
+  Rationale: O construtor/wiring novo já estava coberto e funcional; o gap residual era reforçar validação comportamental end-to-end do comando sem expandir escopo arquitetural.
+  Date/Author: 2026-05-26 / Codex
+
 ## Risks and Mitigations
 
 - Risk: Mudança de mensagens de erro pode quebrar testes/UX.
@@ -169,6 +173,9 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 
 - Risk: `clean verify` continuar falhando por classes fora do escopo pode confundir status.
   Mitigation: Documentar explicitamente que gate deste slice é teste focado do installer; `verify` completo é observacional neste plano.
+
+- Risk: Falha observacional em `RuntimeModeConfigurationWriter` pode ser interpretada como regressão do installer.
+  Mitigation: Registrar explicitamente que a classe está fora do slice installer e incluir sua migração/cobertura no próximo ExecPlan junto de enabler/disabler.
 
 ## Validation Strategy
 
@@ -194,3 +201,4 @@ Fechar validação do slice e documentar riscos pendentes fora do escopo.
 - Em projeto com cobertura por classe estrita, “escopo funcional” e “gate de qualidade global” podem divergir; essa divergência precisa ficar formalizada no plano para evitar ruído operacional.
 - Injeção explícita de boundary no construtor do installer permitiu validar orquestração via teste sem depender de I/O real, enquanto o caminho público do comando permaneceu estável.
 - Remover construtor de conveniência cedo no slice torna desvios arquiteturais visíveis imediatamente (quebra de compilação no command), reduzindo risco de boundary incompleto passar despercebido.
+- A validação observacional de `clean verify` confirmou que a dívida de cobertura não se limita a enabler/disabler; `RuntimeModeConfigurationWriter` também precisa entrar no próximo slice para fechar o gate global.
