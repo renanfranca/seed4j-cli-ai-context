@@ -169,8 +169,8 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
@@ -193,6 +193,17 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
   - `./mvnw -Dtest=RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test`
   - Checkpoint vertical extra: `./mvnw -Dtest=ExtensionInstallCommandTest test`
 
+### Milestone 2 Execution Notes (2026-05-27)
+
+- `RuntimeExtensionInstaller` já estava usando `readConfiguration` + `persistMode(..., RuntimeMode.EXTENSION)` desde o milestone 1.
+- `RuntimeExtensionModeDisabler` migrou para depender de `RuntimeModeConfigurationRepository` injetado e persistir via `persistMode(..., RuntimeMode.STANDARD)`.
+- `RuntimeExtensionModeEnabler` migrou para depender de `RuntimeModeConfigurationRepository` injetado e persistir via `persistMode(..., RuntimeMode.EXTENSION)`.
+- `RuntimeExtensionModeEnabler` manteve `userHome` apenas para validar runtime extension ativo (`RuntimeSelection.resolve`) antes da persistência do modo.
+- `ExtensionInstallCommand` permaneceu compondo com `FileSystemRuntimeModeConfigurationRepository` (sem alteração funcional de wiring necessária neste slice).
+- Validação executada:
+  - `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test`
+  - Checkpoint vertical: `./mvnw -Dtest=ExtensionInstallCommandTest test`
+
 ## Decisions
 
 - Decision: Escopo completo incluindo installer, enabler/disabler e launcher.
@@ -214,6 +225,10 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 - Decision: manter temporariamente as classes homônimas em `bootstrap/domain` até concluir migração de enabler/disabler/launcher no milestone 3.
   Rationale: evitar quebra comportamental nos fluxos que ainda instanciam os helpers legados enquanto o boundary neutro é adotado incrementalmente.
   Date/Author: 2026-05-26 / Codex
+
+- Decision: construtores de `RuntimeExtensionModeEnabler` e `RuntimeExtensionModeDisabler` passam a exigir `RuntimeModeConfigurationRepository` injetado.
+  Rationale: remover instanciação direta de helpers de I/O/YAML no domínio e centralizar persistência na porta neutra.
+  Date/Author: 2026-05-27 / Codex
 
 ## Risks and Mitigations
 
@@ -254,3 +269,4 @@ Recovery:
 - Tornar helpers de I/O/YAML públicos no domínio acelera curto prazo, mas aumenta custo de evolução e risco de acoplamento estrutural.
 - Quebra de compilação guiada por TDD é útil para expor pontos de acoplamento escondidos cedo no slice.
 - Encapsular a configuração carregada em `RuntimeModeConfigurationDocument` reduziu acoplamento em `Map` cru sem alterar semântica de erro observável.
+- Em `enabler`, manter `userHome` separado da porta de configuração evita misturar validação de runtime ativo com persistência de mode.
