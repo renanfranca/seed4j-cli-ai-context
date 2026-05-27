@@ -94,6 +94,31 @@ Remover o protocolo temporal implícito dos três serviços e centralizar uso em
 1. Nenhum dos três serviços manipula documento de config para persistência de modo.
 2. O protocolo prepare/apply é o caminho único de mudança de modo nesses fluxos.
 
+### Milestone 2.5 - Remover duplicidade de `prepareModeChange(...)` na porta
+
+#### Goal
+
+Eliminar a ambiguidade de contrato removendo o `default` da interface `RuntimeModeConfigurationRepository`, após a migração dos fluxos de domínio para `prepare/apply`.
+
+#### Changes
+
+1. Editar `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeModeConfigurationRepository.java` para remover implementação `default` de `prepareModeChange(RuntimeMode)` e manter apenas assinatura abstrata.
+2. Ajustar implementações/doubles que ainda dependem do `default` (incluindo testes de launcher) para implementar `prepareModeChange(...)` explicitamente.
+3. Garantir que `FileSystemRuntimeModeConfigurationRepository` continue como implementação canônica do protocolo.
+
+#### Validation
+
+1. Command: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest,Seed4JCliLauncherTest test`
+2. Expected result: suítes verdes sem dependência implícita de `default`.
+3. Command: `./mvnw -Dtest=ExtensionInstallCommandTest test`
+4. Expected result: caminho público de `extension install` permanece inalterado.
+
+#### Acceptance Criteria
+
+1. Não existe implementação `default` de `prepareModeChange(...)` na porta de domínio.
+2. Não há duplicidade de implementação do protocolo prepare/apply entre porta e adapter.
+3. Implementações de teste permanecem explícitas e compatíveis com o contrato final.
+
 ### Milestone 3 - Reforçar testes focados de ordem e falha
 
 #### Goal
@@ -149,6 +174,8 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
+- [ ] Milestone 2.5 started
+- [ ] Milestone 2.5 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
