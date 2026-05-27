@@ -167,14 +167,31 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
+
+### Milestone 1 Execution Notes (2026-05-26)
+
+- Boundary generalizado em `RuntimeModeConfigurationRepository` com API neutra:
+  - `readConfiguration()`
+  - `readMode()`
+  - `persistMode(..., RuntimeMode mode)`
+- Novo tipo de domínio criado: `RuntimeModeConfigurationDocument`.
+- Helpers de leitura/escrita YAML criados em `bootstrap/infrastructure/secondary` como package-private:
+  - `RuntimeModeConfigReader`
+  - `RuntimeModeConfigurationWriter`
+- `FileSystemRuntimeModeConfigurationRepository` migrou para os helpers secondary e para a API neutra.
+- `RuntimeExtensionInstaller` passou a persistir via `persistMode(..., RuntimeMode.EXTENSION)` usando o documento tipado.
+- Validação executada:
+  - `./mvnw -Dtest=RuntimeExtensionInstallerTest test`
+  - `./mvnw -Dtest=RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test`
+  - Checkpoint vertical extra: `./mvnw -Dtest=ExtensionInstallCommandTest test`
 
 ## Decisions
 
@@ -193,6 +210,10 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 - Decision: `RuntimeModeConfigReader` e `RuntimeModeConfigurationWriter` devem existir apenas em `secondary` como package-private.
   Rationale: são detalhes de tecnologia (filesystem + YAML), não API de domínio.
   Date/Author: 2026-05-26 / Renan + Codex
+
+- Decision: manter temporariamente as classes homônimas em `bootstrap/domain` até concluir migração de enabler/disabler/launcher no milestone 3.
+  Rationale: evitar quebra comportamental nos fluxos que ainda instanciam os helpers legados enquanto o boundary neutro é adotado incrementalmente.
+  Date/Author: 2026-05-26 / Codex
 
 ## Risks and Mitigations
 
@@ -232,3 +253,4 @@ Recovery:
 - O boundary de runtime mode precisa ser único para evitar inconsistência entre install, toggle e bootstrap.
 - Tornar helpers de I/O/YAML públicos no domínio acelera curto prazo, mas aumenta custo de evolução e risco de acoplamento estrutural.
 - Quebra de compilação guiada por TDD é útil para expor pontos de acoplamento escondidos cedo no slice.
+- Encapsular a configuração carregada em `RuntimeModeConfigurationDocument` reduziu acoplamento em `Map` cru sem alterar semântica de erro observável.
