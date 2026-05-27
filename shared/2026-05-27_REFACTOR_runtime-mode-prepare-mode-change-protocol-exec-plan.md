@@ -145,14 +145,19 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 
 ## Progress
 
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
+
+### TDD Cycle Log
+
+- Cycle 1 | Introduzir `prepareModeChange(...).apply()` no adapter com preservação de chaves ao persistir modo | expected failure: erro de compilação por ausência de `RuntimeModeChangePlan` e `prepareModeChange(...)` | 🔴 red result: falhou compilação em `FileSystemRuntimeModeConfigurationRepositoryTest` com símbolos ausentes | 🌱 green change: criado `RuntimeModeChangePlan`, adicionada API `prepareModeChange(...)` na porta e implementação no `FileSystemRuntimeModeConfigurationRepository` baseada em snapshot | suite result: `./mvnw -Dtest=FileSystemRuntimeModeConfigurationRepositoryTest,RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (23 testes) | vertical checkpoint (when due): n/a | 🌀 refactor: sem simplificação necessária no ciclo
+- Cycle 2 | Garantir fail-fast no `prepareModeChange(...)` com YAML inválido | expected failure: falha do novo teste se preparo não validasse configuração | 🔴 red result: teste novo já passou, confirmando fail-fast no preparo | 🌱 green change: sem mudança de produção (comportamento já atendido pelo código do ciclo 1) | suite result: suíte relevante verde (23 testes) | vertical checkpoint (when due): `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes) | 🌀 refactor: sem simplificação necessária no ciclo
 
 ## Decisions
 
@@ -174,6 +179,10 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 
 - Decision: Preservar `readMode()` na porta atual para compatibilidade com fluxo de launcher no plano incremental.
   Rationale: evita churn de assinatura fora do escopo imediato.
+  Date/Author: 2026-05-27 / Renan + Codex
+
+- Decision: Introduzir `prepareModeChange(RuntimeMode)` como método default da porta nesta milestone.
+  Rationale: manter compatibilidade com doubles de teste e fluxos ainda não migrados, enquanto o adapter filesystem já expõe o protocolo prepare/apply.
   Date/Author: 2026-05-27 / Renan + Codex
 
 ## Risks and Mitigations
