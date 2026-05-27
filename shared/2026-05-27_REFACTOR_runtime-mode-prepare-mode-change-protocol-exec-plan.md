@@ -174,8 +174,8 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
-- [ ] Milestone 2.5 started
-- [ ] Milestone 2.5 completed
+- [x] Milestone 2.5 started
+- [x] Milestone 2.5 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
@@ -188,6 +188,7 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 - Cycle 3 | Migrar `RuntimeExtensionInstaller` para protocolo `prepareModeChange(RuntimeMode.EXTENSION).apply()` mantendo aplicação após instalação de artefatos | expected failure: compile quebrada ao exigir métricas de `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) com produção ainda em `read/persist` | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionInstallerTest`) | 🌱 green change: `RuntimeExtensionInstaller` passou a preparar plano e aplicar no final; testes do installer atualizados para asserts de `prepare/apply` e ordem (`apply` após `install`) | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): n/a | 🌀 refactor: sem simplificação necessária no ciclo
 - Cycle 4 | Migrar `RuntimeExtensionModeEnabler` para `prepareModeChange(RuntimeMode.EXTENSION).apply()` preservando fail-fast de config inválida | expected failure: compile quebrada ao exigir `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionModeEnablerTest`) | 🌱 green change: `RuntimeExtensionModeEnabler` migrou para plano preparado/aplicado e testes injetados passaram a validar `prepare/apply` | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes) | 🌀 refactor: sem simplificação necessária no ciclo
 - Cycle 5 | Migrar `RuntimeExtensionModeDisabler` para `prepareModeChange(RuntimeMode.STANDARD).apply()` | expected failure: compile quebrada ao exigir `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionModeDisablerTest`) | 🌱 green change: `RuntimeExtensionModeDisabler` migrou para plano preparado/aplicado e testes injetados passaram a validar `prepare/apply` | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): n/a | 🌀 refactor: sem simplificação necessária no ciclo
+- Cycle 6 | Remover duplicidade do protocolo `prepareModeChange(...)` eliminando implementação default na porta | expected failure: novo teste de contrato falha com `Method.isDefault() == true` enquanto a interface ainda expõe implementação default | 🔴 red result: `RuntimeModeConfigurationRepositoryContractTest` falhou como esperado (`isDefault` retornou `true`) | 🌱 green change: removido `default prepareModeChange(...)` da interface, adicionada implementação explícita no double de `Seed4JCliLauncherTest` e assert de que launcher não chama `prepareModeChange(...)` | suite result: `./mvnw -Dtest=RuntimeModeConfigurationRepositoryContractTest,RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest,Seed4JCliLauncherTest test` verde (53 testes) | vertical checkpoint (when due): `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes) | 🌀 refactor: sem simplificação adicional necessária no ciclo
 
 ## Decisions
 
@@ -211,8 +212,12 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
   Rationale: evita churn de assinatura fora do escopo imediato.
   Date/Author: 2026-05-27 / Renan + Codex
 
-- Decision: Introduzir `prepareModeChange(RuntimeMode)` como método default da porta nesta milestone.
-  Rationale: manter compatibilidade com doubles de teste e fluxos ainda não migrados, enquanto o adapter filesystem já expõe o protocolo prepare/apply.
+- Decision: Introduzir `prepareModeChange(RuntimeMode)` como método default da porta na etapa transitória inicial.
+  Rationale: permitir migração incremental dos fluxos de domínio e doubles de teste sem quebra imediata.
+  Date/Author: 2026-05-27 / Renan + Codex
+
+- Decision: Remover o `default prepareModeChange(...)` ao concluir Milestone 2.5 e manter apenas contrato abstrato na porta.
+  Rationale: eliminar duplicidade de implementação entre porta e adapter, tornando explícito o contrato final para todas as implementações.
   Date/Author: 2026-05-27 / Renan + Codex
 
 - Decision: No enabler, preparar mudança de modo antes da validação dos artefatos de runtime.
