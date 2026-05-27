@@ -147,8 +147,8 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
@@ -158,6 +158,9 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 
 - Cycle 1 | Introduzir `prepareModeChange(...).apply()` no adapter com preservação de chaves ao persistir modo | expected failure: erro de compilação por ausência de `RuntimeModeChangePlan` e `prepareModeChange(...)` | 🔴 red result: falhou compilação em `FileSystemRuntimeModeConfigurationRepositoryTest` com símbolos ausentes | 🌱 green change: criado `RuntimeModeChangePlan`, adicionada API `prepareModeChange(...)` na porta e implementação no `FileSystemRuntimeModeConfigurationRepository` baseada em snapshot | suite result: `./mvnw -Dtest=FileSystemRuntimeModeConfigurationRepositoryTest,RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (23 testes) | vertical checkpoint (when due): n/a | 🌀 refactor: sem simplificação necessária no ciclo
 - Cycle 2 | Garantir fail-fast no `prepareModeChange(...)` com YAML inválido | expected failure: falha do novo teste se preparo não validasse configuração | 🔴 red result: teste novo já passou, confirmando fail-fast no preparo | 🌱 green change: sem mudança de produção (comportamento já atendido pelo código do ciclo 1) | suite result: suíte relevante verde (23 testes) | vertical checkpoint (when due): `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes) | 🌀 refactor: sem simplificação necessária no ciclo
+- Cycle 3 | Migrar `RuntimeExtensionInstaller` para protocolo `prepareModeChange(RuntimeMode.EXTENSION).apply()` mantendo aplicação após instalação de artefatos | expected failure: compile quebrada ao exigir métricas de `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) com produção ainda em `read/persist` | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionInstallerTest`) | 🌱 green change: `RuntimeExtensionInstaller` passou a preparar plano e aplicar no final; testes do installer atualizados para asserts de `prepare/apply` e ordem (`apply` após `install`) | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): n/a | 🌀 refactor: sem simplificação necessária no ciclo
+- Cycle 4 | Migrar `RuntimeExtensionModeEnabler` para `prepareModeChange(RuntimeMode.EXTENSION).apply()` preservando fail-fast de config inválida | expected failure: compile quebrada ao exigir `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionModeEnablerTest`) | 🌱 green change: `RuntimeExtensionModeEnabler` migrou para plano preparado/aplicado e testes injetados passaram a validar `prepare/apply` | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes) | 🌀 refactor: sem simplificação necessária no ciclo
+- Cycle 5 | Migrar `RuntimeExtensionModeDisabler` para `prepareModeChange(RuntimeMode.STANDARD).apply()` | expected failure: compile quebrada ao exigir `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionModeDisablerTest`) | 🌱 green change: `RuntimeExtensionModeDisabler` migrou para plano preparado/aplicado e testes injetados passaram a validar `prepare/apply` | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): n/a | 🌀 refactor: sem simplificação necessária no ciclo
 
 ## Decisions
 
@@ -183,6 +186,10 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 
 - Decision: Introduzir `prepareModeChange(RuntimeMode)` como método default da porta nesta milestone.
   Rationale: manter compatibilidade com doubles de teste e fluxos ainda não migrados, enquanto o adapter filesystem já expõe o protocolo prepare/apply.
+  Date/Author: 2026-05-27 / Renan + Codex
+
+- Decision: No enabler, preparar mudança de modo antes da validação dos artefatos de runtime.
+  Rationale: preservar precedência de fail-fast de configuração inválida quando config e artefatos estão inválidos simultaneamente.
   Date/Author: 2026-05-27 / Renan + Codex
 
 ## Risks and Mitigations
