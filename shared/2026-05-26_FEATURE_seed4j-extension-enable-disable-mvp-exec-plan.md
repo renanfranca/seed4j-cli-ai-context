@@ -39,6 +39,9 @@ Safety boundary: This task is limited to authorized, defensive maintenance of th
 - A árvore de comandos de `extension` hoje só registra `install`.
 - O bootstrap falha cedo quando `mode: extension` está inválido; este plano mantém esse comportamento por decisão de escopo MVP.
 - Documentação atual (`README.md`, `documentation/Commands.md`) cobre apenas `install` como comando de gestão de extensão.
+- Atualização de contexto (2026-05-27): o refactor arquitetural de runtime-mode foi concluído em
+  `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-26_REFACTOR_runtime-mode-secondary-boundary-enabler-disabler-launcher-exec-plan.md`
+  (boundary único via `RuntimeModeConfigurationRepository`, helpers YAML apenas em `bootstrap/infrastructure/secondary`).
 
 ## Desired End State
 
