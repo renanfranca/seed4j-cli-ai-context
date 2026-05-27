@@ -41,6 +41,7 @@ Out-of-scope:
 - `RuntimeExtensionInstaller` já depende de `RuntimeModeConfigurationRepository`, porém o contrato atual é enviesado para install (`persistExtensionMode`).
 - `RuntimeExtensionModeEnabler`, `RuntimeExtensionModeDisabler` e `Seed4JCliLauncher` ainda instanciam `RuntimeModeConfigReader`/`RuntimeModeConfigurationWriter` diretamente.
 - Planos base relacionados:
+
 1. `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-26_REFACTOR_runtime-extension-installer-persistence-boundary-exec-plan.md`
 2. `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-26_FEATURE_seed4j-extension-enable-disable-mvp-exec-plan.md`
 
@@ -94,9 +95,9 @@ Concluir a migração do fluxo de instalação e dos serviços de alternância d
 3. Editar `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionModeDisabler.java` para depender de `RuntimeModeConfigurationRepository` injetado e remover `new RuntimeModeConfigReader()`/`RuntimeModeConfigurationWriter`.
 4. Ajustar wiring em `src/main/java/com/seed4j/cli/command/infrastructure/primary/ExtensionInstallCommand.java` para continuar compondo com `FileSystemRuntimeModeConfigurationRepository`.
 5. Ajustar testes diretamente impactados:
-`src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionInstallerTest.java`,
-`src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionModeEnablerTest.java`,
-`src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionModeDisablerTest.java`.
+   `src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionInstallerTest.java`,
+   `src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionModeEnablerTest.java`,
+   `src/test/java/com/seed4j/cli/bootstrap/domain/RuntimeExtensionModeDisablerTest.java`.
 
 #### Validation
 
@@ -124,8 +125,8 @@ Fechar o boundary em todo o bootstrap e eliminar definitivamente os helpers púb
 3. Remover `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeModeConfigReader.java`.
 4. Remover `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeModeConfigurationWriter.java`.
 5. Ajustar testes de launcher que constroem o objeto diretamente:
-`src/test/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherTest.java`,
-`src/test/java/com/seed4j/cli/bootstrap/domain/ExtensionRuntimeBootstrapInProcessTest.java`.
+   `src/test/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherTest.java`,
+   `src/test/java/com/seed4j/cli/bootstrap/domain/ExtensionRuntimeBootstrapInProcessTest.java`.
 
 #### Validation
 
@@ -171,8 +172,8 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 - [x] Milestone 1 completed
 - [x] Milestone 2 started
 - [x] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
 - [ ] Milestone 4 started
 - [ ] Milestone 4 completed
 
@@ -204,6 +205,24 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
   - `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test`
   - Checkpoint vertical: `./mvnw -Dtest=ExtensionInstallCommandTest test`
 
+### Milestone 3 Execution Notes (2026-05-27)
+
+- `Seed4JCliLauncher` passou a depender explicitamente de `RuntimeModeConfigurationRepository` e usa `readMode()` como única fonte de verdade para runtime mode.
+- `Seed4JCliLauncherFactory` passou a compor `Seed4JCliLauncher` com `FileSystemRuntimeModeConfigurationRepository`, removendo fallback de leitura de YAML dentro do launcher.
+- Testes que instanciavam launcher diretamente foram migrados para o novo construtor com porta injetada:
+  - `Seed4JCliLauncherTest`
+  - `ExtensionRuntimeBootstrapInProcessTest`
+- Os helpers legados foram removidos de `bootstrap/domain`:
+  - `RuntimeModeConfigReader.java`
+  - `RuntimeModeConfigurationWriter.java`
+- Foi adicionado teste explícito em `Seed4JCliLauncherFactoryTest` para garantir:
+  - ausência do construtor legado sem repositório;
+  - ausência das classes legadas de YAML no pacote de domínio.
+- Validação executada:
+  - `./mvnw -Dtest=Seed4JCliLauncherTest,Seed4JCliLauncherFactoryTest,ExtensionRuntimeBootstrapInProcessTest test`
+  - Checkpoint vertical: `./mvnw -Dtest=Seed4JCliAppTest test`
+  - Regressão cruzada do milestone: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest,ExtensionInstallCommandTest test`
+
 ## Decisions
 
 - Decision: Escopo completo incluindo installer, enabler/disabler e launcher.
@@ -228,6 +247,10 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 
 - Decision: construtores de `RuntimeExtensionModeEnabler` e `RuntimeExtensionModeDisabler` passam a exigir `RuntimeModeConfigurationRepository` injetado.
   Rationale: remover instanciação direta de helpers de I/O/YAML no domínio e centralizar persistência na porta neutra.
+  Date/Author: 2026-05-27 / Codex
+
+- Decision: `Seed4JCliLauncher` não mantém mais construtor legado sem `RuntimeModeConfigurationRepository`.
+  Rationale: impedir recidiva de acoplamento do domínio com leitura YAML/Filesystem e forçar composição no boundary secundário.
   Date/Author: 2026-05-27 / Codex
 
 ## Risks and Mitigations
@@ -255,10 +278,12 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 ## Rollout and Recovery
 
 Rollout:
+
 1. Entregar como refactor interno sem alterar contrato público de CLI.
 2. Revisar diff final para confirmar ausência de mudança funcional involuntária.
 
 Recovery:
+
 1. Reverter somente commits do milestone com regressão.
 2. Se regressão ocorrer no launcher, priorizar rollback do wiring do launcher mantendo boundary de installer já estável.
 3. Manter referência aos planos anteriores para reaplicar a migração incrementalmente sem retrabalho.

@@ -12,12 +12,14 @@ Safety boundary: This task is limited to authorized, defensive maintenance of th
 ## Scope
 
 In-scope:
+
 - Corrigir os 2 issues Sonar `java:S5998` em `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeLibraryVersionComparator.java` (linhas atuais 10 e 124).
 - Adicionar testes de regressão para entradas grandes/malformadas sem `StackOverflowError`.
 - Escopo preventivo adicional em `RuntimeLibraryIdentity` para reduzir custo de parsing de nomes inválidos muito grandes sem alterar contrato funcional.
 - Validar com `./mvnw clean verify` e confirmar fechamento via API Sonar.
 
 Out-of-scope:
+
 - Alterar regras de comparação de versões além de hardening de regex/validação.
 - Mudar mensagens de erro funcionais já existentes.
 - Refatorações amplas fora de `bootstrap/domain`.
@@ -195,10 +197,12 @@ Comprovar estabilidade local e encerramento dos dois issues no Sonar.
 ## Rollout and Recovery
 
 Rollout:
+
 1. Commit único focado em confiabilidade do parsing de versão (`fix(bootstrap): ...`).
 2. PR com evidências dos comandos de validação e resposta da API Sonar.
 
 Recovery:
+
 1. Se houver regressão funcional, reverter apenas mudanças de `RuntimeLibraryIdentity` e revalidar.
 2. Se o problema estiver no comparador, reverter o commit e reaplicar em dois passos menores: testes primeiro, regex depois.
 

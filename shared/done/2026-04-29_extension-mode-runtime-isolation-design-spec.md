@@ -4,30 +4,39 @@
 
 - Ponto critico confirmado: o modelo atual (`PropertiesLauncher` + `loader.path` com `BOOT-INF/classes` e `BOOT-INF/lib`) mantem risco estrutural de interferencia da extensao no runtime do CLI.
 - Adotar fronteira em 2 JVMs no `extension mode`:
+
 1. JVM de comando do CLI (runtime base do `seed4j-cli`, sem classpath da extensao).
 2. JVM worker da extensao (controlada pelo CLI, protocolo explicito).
+
 - Corte direto: remover uso de `loader.path` da extensao no processo principal.
 - Manter contrato aditivo de catalogo: modulos standard continuam, extensao so adiciona.
 
 ## Mudancas de Implementacao
 
 - Bootstrap/runtime:
+
 1. Remover injecao de `loader.path` da extensao no launcher.
 2. Passar apenas metadados de runtime e caminho do `extension.jar` por propriedade dedicada (`seed4j.cli.runtime.extension.jar.path`).
 3. Preservar baseline de logging do CLI no processo principal.
+
 - Worker + protocolo:
+
 1. Criar modo interno de execucao `extension-worker` no mesmo artefato do CLI.
 2. Cliente no CLI chama worker por `stdin/stdout` (JSON) com operacoes `catalog` e `apply`.
 3. `catalog` retorna descritores serializaveis de modulos (slug, descricao, propriedades, organizacao/dependencias).
 4. `apply` recebe slug + propriedades finais e executa aplicacao no worker.
+
 - Carregamento isolado da extensao no worker:
+
 1. Ler `Start-Class` do `MANIFEST` do `extension.jar` para descobrir pacote base real (suporta `com.seed4j...` e `com.mycompany...`).
 2. Carregar `BOOT-INF/classes` e `BOOT-INF/lib` em classloader isolado com parent do CLI (runtime base continua do CLI).
 3. Descobrir contribuicoes por capacidade, nao por nome/pacote gerado:
    - `Seed4JModuleResource`
    - beans `Reader` do ecossistema `com.seed4j.module.infrastructure.secondary...`
 4. Bloquear influencia de recursos globais da extensao no CLI (`config/application*.yml`, `logback*` nao entram no runtime principal).
+
 - Roteamento de comandos:
+
 1. `list` em `extension mode`: usar catalogo do worker e validar aditividade.
 2. `apply` em `extension mode`: delegar execucao ao worker para preservar comportamento de readers gerados pela extensao.
 3. `--version` continua local no CLI principal.

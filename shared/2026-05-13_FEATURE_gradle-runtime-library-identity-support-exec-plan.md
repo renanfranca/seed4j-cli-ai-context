@@ -288,4 +288,3 @@ Recovery:
 - Metadados de manifest em artefatos Gradle/Bnd podem oferecer identidade suficiente para reduzir dependencia de heuristica por nome.
 - Regra de conflito precisa balancear seguranca (evitar override silencioso) e compatibilidade (nao bloquear jars validos por ausencia de metadata Maven).
 - Diagnostico de decisao por biblioteca e essencial para operacao e para depurar divergencias entre ambientes.
-

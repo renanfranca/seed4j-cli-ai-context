@@ -42,6 +42,7 @@ Fora de escopo:
 
 ```java
 ProjectHistory history = projects.getHistory(new ProjectPath(projectPath.toString()));
+
 Object value = history.latestProperties().parameters().getOrDefault(propertyKey, null);
 ```
 
