@@ -174,8 +174,8 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 - [x] Milestone 2 completed
 - [x] Milestone 3 started
 - [x] Milestone 3 completed
-- [ ] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 4 started
+- [x] Milestone 4 completed
 
 ### Milestone 1 Execution Notes (2026-05-26)
 
@@ -223,6 +223,23 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
   - Checkpoint vertical: `./mvnw -Dtest=Seed4JCliAppTest test`
   - Regressão cruzada do milestone: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest,ExtensionInstallCommandTest test`
 
+### Milestone 4 Execution Notes (2026-05-27)
+
+- ExecPlan principal atualizado com fechamento do refactor de runtime-mode em launcher/install/toggle.
+- Plano relacionado de enable/disable MVP atualizado para registrar que o refactor arquitetural de runtime-mode foi concluído:
+  - `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-26_FEATURE_seed4j-extension-enable-disable-mvp-exec-plan.md`.
+- Durante `./mvnw clean verify`, o gate de cobertura apontou lacunas em caminhos de erro/fallback:
+  - `RuntimeModeConfigurationWriter` (fallback `AtomicMoveNotSupportedException` e limpeza de arquivo temporário).
+  - `RuntimeExtensionModeEnabler` e `RuntimeExtensionModeDisabler` (tratamento de `IOException` de persistência).
+- Cobertura foi fechada com testes adicionais mínimos:
+  - `RuntimeModeConfigurationWriterTest` (novo).
+  - Cenários de falha de persistência em `RuntimeExtensionModeEnablerTest` e `RuntimeExtensionModeDisablerTest`.
+- Contrato público de comandos permaneceu inalterado neste slice (nenhum comando novo/alterado além do comportamento já existente).
+- Validação executada:
+  - `./mvnw -Dtest=RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest,RuntimeModeConfigurationWriterTest test`
+  - `./mvnw clean verify`
+  - `npm run prettier:check`
+
 ## Decisions
 
 - Decision: Escopo completo incluindo installer, enabler/disabler e launcher.
@@ -251,6 +268,10 @@ Consolidar validação ampla e registrar dívida remanescente/decisões para os 
 
 - Decision: `Seed4JCliLauncher` não mantém mais construtor legado sem `RuntimeModeConfigurationRepository`.
   Rationale: impedir recidiva de acoplamento do domínio com leitura YAML/Filesystem e forçar composição no boundary secundário.
+  Date/Author: 2026-05-27 / Codex
+
+- Decision: Cobrir explicitamente caminhos de fallback/erro de persistência para satisfazer gate de cobertura integral do módulo.
+  Rationale: `clean verify` exige cobertura completa das classes impactadas, incluindo fluxos de exceção/fallback.
   Date/Author: 2026-05-27 / Codex
 
 ## Risks and Mitigations
