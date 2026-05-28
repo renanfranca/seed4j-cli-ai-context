@@ -1,4 +1,4 @@
-# Refatorar bootstrap com assembler pré-Spring e application service único para runtime extension
+# Refatorar bootstrap com orquestrador pré-Spring em application e assembler primário
 
 This ExecPlan is a living document. Keep `Progress`, `Decisions`, `Risks`, and `Lessons Learned` up to date as work advances.
 
@@ -6,12 +6,14 @@ Safety boundary: This task is limited to authorized, defensive maintenance of th
 
 ## Purpose / Big Picture
 
-O objetivo é tornar o bootstrap mais previsível para evolução sem quebrar o requisito central do CLI: parte do fluxo precisa acontecer antes do Spring Boot inicializar. Para o usuário final, o comportamento deve continuar igual no startup do CLI, e os comandos de extensão devem permanecer funcionais com mensagens e exit codes consistentes. O ganho principal é estrutural: separar claramente a composição pré-Spring da orquestração pós-Spring, reduzindo acoplamento entre adapters de entrada e detalhes de filesystem.
+O objetivo é tornar o bootstrap mais previsível para evolução sem quebrar o requisito central do CLI: parte do fluxo precisa acontecer antes do Spring Boot inicializar. Para o usuário final, o comportamento deve continuar igual no startup do CLI, e os comandos de extensão devem permanecer funcionais com mensagens e exit codes consistentes. O ganho principal é estrutural: separar claramente, no fluxo pré-Spring, a orquestração de caso de uso (application) da composição técnica (assembler), além de manter a orquestração pós-Spring de runtime extension em application.
 
 ## Scope
 
 In-scope:
-- Extrair a composição pré-Spring para um assembler em `bootstrap/infrastructure/primary`.
+
+- Introduzir um orquestrador pré-Spring em `bootstrap/application` para o fluxo de bootstrap.
+- Manter `PreSpringLauncherAssembler` em `bootstrap/infrastructure/primary` com papel estrito de composição técnica.
 - Manter o construtor package-private de `Seed4JCliLauncher` e preservar a factory de domínio como ponto de criação interno ao pacote.
 - Remover dependência `domain -> infrastructure.secondary` no caminho do launcher.
 - Introduzir `bootstrap/application/RuntimeExtensionApplicationService` único para `install`, `enable` e `disable`.
@@ -20,6 +22,7 @@ In-scope:
 - Refatorar `ExtensionInstallCommand` para depender do application service.
 
 Out-of-scope:
+
 - Alterar contrato funcional de runtime mode no launcher.
 - Introduzir bypass de validação no bootstrap.
 - Redesenhar todos os comandos de `command/infrastructure/primary` além do fluxo de extensão.
@@ -28,6 +31,7 @@ Out-of-scope:
 ## Definitions
 
 - Pré-Spring: fluxo executado em `main(...)` antes de `SpringApplicationBuilder.run(...)`.
+- Orquestrador pré-Spring: serviço de application que executa o caso de uso de bootstrap antes do contexto Spring existir.
 - Assembler pré-Spring: classe de infraestrutura primária responsável por montar dependências concretas do launcher fora do container Spring.
 - Porta: interface do domínio usada para inversão de dependência (exemplo: `RuntimeModeConfigurationRepository`).
 - Adapter secondary: implementação técnica de porta (exemplo: `FileSystemRuntimeModeConfigurationRepository`).
@@ -36,14 +40,17 @@ Out-of-scope:
 ## Existing Context
 
 O fluxo atual tem dois pontos de acoplamento relevantes:
+
 1. `src/main/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherFactory.java` está no pacote `domain` e instancia `FileSystemRuntimeModeConfigurationRepository` (adapter secondary), criando dependência de domínio para infraestrutura.
 2. `src/main/java/com/seed4j/cli/command/infrastructure/primary/ExtensionInstallCommand.java` instancia manualmente `RuntimeExtensionInstaller` e adapters de filesystem no construtor, misturando adapter primário com composição técnica.
+3. O risco arquitetural discutido é `PreSpringLauncherAssembler` virar orquestrador de caso de uso; a decisão é manter orquestração no pacote `bootstrap/application`.
 
 O `Seed4JCliApp` já tem requisitos reais de pré-Spring em `productionBootstrapEntryPoint(...)`, então o plano preserva esse desenho e apenas melhora a fronteira arquitetural.
 
 ## Desired End State
 
-- `Seed4JCliApp` delega montagem pré-Spring para um assembler dedicado em `bootstrap/infrastructure/primary`.
+- `Seed4JCliApp` delega o caso de uso pré-Spring para um orquestrador em `bootstrap/application`.
+- `PreSpringLauncherAssembler` permanece em `bootstrap/infrastructure/primary` e apenas monta dependências concretas desse orquestrador (sem decidir fluxo).
 - `Seed4JCliLauncherFactory` permanece no domínio somente como factory de composição interna, sem importar classes de `bootstrap/infrastructure/secondary`.
 - Um único `RuntimeExtensionApplicationService` existe em `bootstrap/application` com métodos para `install`, `enable` e `disable`.
 - `RuntimeExtensionApplicationService` recebe interfaces (`RuntimeModeConfigurationRepository`, `RuntimeExtensionArtifactsRepository`) e `Path userHome`, e instancia internamente os serviços de domínio correspondentes.
@@ -52,24 +59,28 @@ O `Seed4JCliApp` já tem requisitos reais de pré-Spring em `productionBootstrap
 
 ## Milestones
 
-### Milestone 1 - Isolar composição pré-Spring no assembler primário
+### Milestone 1 - Introduzir orquestrador pré-Spring e restringir assembler à composição
 
 #### Goal
 
-Separar a montagem técnica do launcher em uma classe explícita de pré-Spring sem mudar comportamento de execução do CLI.
+Separar explicitamente a orquestração pré-Spring (application) da composição técnica (assembler) sem mudar comportamento de execução do CLI.
 
 #### Changes
 
 Editar os seguintes arquivos:
-1. Criar `src/main/java/com/seed4j/cli/bootstrap/infrastructure/primary/PreSpringLauncherAssembler.java` para montar:
+
+1. Criar `src/main/java/com/seed4j/cli/bootstrap/application/PreSpringBootstrapApplicationService.java` para orquestrar o caso de uso pré-Spring (launch path e retorno de exit code).
+2. Criar/editar `src/main/java/com/seed4j/cli/bootstrap/infrastructure/primary/PreSpringLauncherAssembler.java` para montar:
    - `LocalSpringCliRunner`;
    - `ChildProcessLauncher`;
    - `RuntimeModeConfigurationRepository` (adapter filesystem);
-   - `Seed4JCliLauncher` via `Seed4JCliLauncherFactory`.
-2. Editar `src/main/java/com/seed4j/cli/Seed4JCliApp.java` para delegar `productionBootstrapEntryPoint(...)` ao novo assembler.
-3. Editar `src/main/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherFactory.java` para remover import de adapter secondary e receber `RuntimeModeConfigurationRepository` como dependência de entrada.
-4. Atualizar/ajustar testes de bootstrap afetados:
+   - `Seed4JCliLauncher` via `Seed4JCliLauncherFactory`;
+   - instância do `PreSpringBootstrapApplicationService`.
+3. Editar `src/main/java/com/seed4j/cli/Seed4JCliApp.java` para delegar `productionBootstrapEntryPoint(...)` ao `PreSpringBootstrapApplicationService` montado pelo assembler.
+4. Editar `src/main/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherFactory.java` para remover import de adapter secondary e receber `RuntimeModeConfigurationRepository` como dependência de entrada.
+5. Atualizar/ajustar testes de bootstrap afetados:
    - `src/test/java/com/seed4j/cli/Seed4JCliAppTest.java`;
+   - `src/test/java/com/seed4j/cli/bootstrap/application/PreSpringBootstrapApplicationServiceTest.java` (novo arquivo, se necessário);
    - `src/test/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherFactoryTest.java`.
 
 #### Validation
@@ -77,11 +88,15 @@ Editar os seguintes arquivos:
 Command: `./mvnw -Dtest=Seed4JCliAppTest,Seed4JCliLauncherFactoryTest,Seed4JCliLauncherTest test`  
 Expected result: testes de bootstrap passam e o fluxo pré-Spring continua funcional sem regressões de exit code.
 
+Command: `./mvnw -Dtest=PreSpringBootstrapApplicationServiceTest test`  
+Expected result: orquestração pré-Spring comprovada em teste dedicado sem lógica de composição no assembler.
+
 #### Acceptance Criteria
 
 1. Não existe import de `bootstrap.infrastructure.secondary` em `Seed4JCliLauncherFactory`.
-2. `Seed4JCliApp` não contém mais composição detalhada de launcher; ela é delegada ao assembler.
-3. Execução de bootstrap preserva contratos atuais de fallback/local/child mode.
+2. `PreSpringLauncherAssembler` monta dependências, mas não contém decisão de fluxo de negócio de bootstrap.
+3. `Seed4JCliApp` não contém mais composição detalhada de launcher; ela é delegada ao fluxo `assembler -> application service`.
+4. Execução de bootstrap preserva contratos atuais de fallback/local/child mode.
 
 ### Milestone 2 - Introduzir application service único para runtime extension
 
@@ -92,6 +107,7 @@ Concentrar a orquestração de `install`, `enable` e `disable` na camada `applic
 #### Changes
 
 Editar os seguintes arquivos:
+
 1. Criar `src/main/java/com/seed4j/cli/bootstrap/application/RuntimeExtensionApplicationService.java` com:
    - método `install(RuntimeExtensionInstallRequest request)`;
    - método `enable()`;
@@ -125,6 +141,7 @@ Fechar o refactor com validação ampla, documentação arquitetural mínima e p
 #### Changes
 
 Editar os seguintes arquivos:
+
 1. Atualizar este ExecPlan com estado final de progresso, decisões, riscos e aprendizados.
 2. Se necessário, atualizar documentação arquitetural:
    - `documentation/Commands.md` (somente se output/fluxo observável mudar);
@@ -161,6 +178,10 @@ Expected result: sem divergências de formatação.
   Rationale: o fluxo de entrada pré-Spring é um adapter primário do contexto bootstrap e precisa existir fora do container.
   Date/Author: 2026-05-27 / Renan + Codex
 
+- Decision: Introduzir `PreSpringBootstrapApplicationService` em `bootstrap/application` para orquestrar o caso de uso pré-Spring.
+  Rationale: evitar que o assembler acumule regras de fluxo; assembler permanece composição técnica.
+  Date/Author: 2026-05-28 / Renan + Codex
+
 - Decision: Usar um único `RuntimeExtensionApplicationService` para `install`, `enable`, `disable`.
   Rationale: os três casos compartilham contexto e dependências; simplifica MVP sem impedir split futuro.
   Date/Author: 2026-05-27 / Renan + Codex
@@ -177,6 +198,9 @@ Expected result: sem divergências de formatação.
 
 - Risk: regressão no startup pré-Spring ao mover composição para assembler.
   Mitigation: manter testes focados de `Seed4JCliApp` e `Seed4JCliLauncher` no primeiro milestone.
+
+- Risk: `PreSpringLauncherAssembler` voltar a acumular lógica de orquestração em refactors futuros.
+  Mitigation: cobrir fluxo de orquestração em teste de `PreSpringBootstrapApplicationService` e revisar assembler para manter escopo de composição.
 
 - Risk: duplicidade de composição entre assembler pré-Spring e configuração Spring pós-Spring.
   Mitigation: explicitar responsabilidades de cada trilha no código e no ExecPlan; evitar copiar regras de domínio.
@@ -200,10 +224,12 @@ Expected result: sem divergências de formatação.
 ## Rollout and Recovery
 
 Rollout:
+
 1. Entregar como refactor interno sem mudança intencional de contrato público do CLI.
 2. Priorizar merge após validação completa local.
 
 Recovery:
+
 1. Se regressão ocorrer no startup, reverter Milestone 1 isoladamente para restabelecer fluxo pré-Spring antigo.
 2. Se regressão ocorrer no comando `extension install`, reverter Milestone 2 mantendo Milestone 1.
 3. Revalidar com `./mvnw clean verify` após rollback parcial.
