@@ -165,12 +165,23 @@ Expected result: sem divergências de formatação.
 ## Progress
 
 - [x] ExecPlan drafted
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
+
+Milestone 1 execution notes (2026-05-28):
+
+- `PreSpringBootstrapApplicationService` criado em `bootstrap/application` para orquestrar `launch(args)` com `childMode`.
+- `PreSpringLauncherAssembler` criado em `bootstrap/infrastructure/primary` para composição técnica de launcher pré-Spring.
+- `Seed4JCliApp.productionBootstrapEntryPoint(...)` passou a delegar para `assembler -> application service`.
+- `Seed4JCliLauncherFactory` removido de dependência direta de adapter secondary; agora recebe `RuntimeModeConfigurationRepository` por entrada.
+- Validações executadas e aprovadas:
+  - `./mvnw -Dtest=Seed4JCliAppTest,Seed4JCliLauncherFactoryTest,Seed4JCliLauncherTest test`
+  - `./mvnw -Dtest=PreSpringBootstrapApplicationServiceTest test`
+  - `seed4j --version` (exit code 0)
 
 ## Decisions
 
@@ -193,6 +204,10 @@ Expected result: sem divergências de formatação.
 - Decision: Preservar `Seed4JCliLauncherFactory` no domínio, mas sem import de secondary.
   Rationale: manter construtor package-private do launcher e fronteira de pacote, removendo vazamento de camada.
   Date/Author: 2026-05-27 / Renan + Codex
+
+- Decision: Expor seam package-private em `Seed4JCliApp.productionBootstrapEntryPoint(...)` para injeção de factory do `PreSpringBootstrapApplicationService` em teste.
+  Rationale: validar delegação app -> assembler/application sem acoplar teste à composição interna nem quebrar encapsulamento público.
+  Date/Author: 2026-05-28 / Renan + Codex
 
 ## Risks and Mitigations
 
@@ -236,4 +251,6 @@ Recovery:
 
 ## Lessons Learned
 
-- A ser preenchido durante a execução.
+- A separação `assembler -> application service` no pré-Spring preservou o comportamento público sem exigir mudanças no contrato de `runProductionPath`.
+- Mover a dependência de `RuntimeModeConfigurationRepository` para a entrada do factory do launcher eliminou vazamento `domain -> infrastructure.secondary` com impacto pequeno na API.
+- Um seam package-private para factory no app simplificou testes de delegação sem expor novas APIs públicas do CLI.
