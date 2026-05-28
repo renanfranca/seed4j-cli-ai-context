@@ -44,6 +44,7 @@ Out-of-scope:
 
 1. `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-26_REFACTOR_runtime-extension-installer-persistence-boundary-exec-plan.md`
 2. `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-26_FEATURE_seed4j-extension-enable-disable-mvp-exec-plan.md`
+3. Continuação concluída: `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-27_REFACTOR_runtime-mode-prepare-mode-change-protocol-exec-plan.md`
 
 ## Desired End State
 
