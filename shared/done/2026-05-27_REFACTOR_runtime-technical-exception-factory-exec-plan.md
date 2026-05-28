@@ -13,11 +13,13 @@ A referência adotada é o padrão do `seed4j/module`: centralizar construção 
 ## Scope
 
 Em escopo:
+
 - Erros funcionais de I/O/YAML no bootstrap/runtime que hoje viram `InvalidRuntimeConfigurationException`.
 - Centralização da composição de mensagem técnica em um único ponto.
 - Ajustes de testes para refletir detalhe dinâmico sem fragilidade.
 
 Fora de escopo:
+
 - Mudança de contrato funcional dos comandos.
 - Alteração de exceções puramente de validação de domínio (sem I/O/YAML).
 - Mudanças em cleanup best-effort que são intencionalmente silenciosas.

@@ -11,6 +11,7 @@ Este plano reduz acoplamento temporal implícito no fluxo de runtime mode ao tro
 ## Scope
 
 In-scope:
+
 - Evoluir a porta `RuntimeModeConfigurationRepository` para o protocolo aprovado na conversa.
 - Introduzir tipo de domínio `RuntimeModeChangePlan` com `apply()`.
 - Migrar `RuntimeExtensionInstaller`, `RuntimeExtensionModeEnabler` e `RuntimeExtensionModeDisabler` para o novo protocolo.
@@ -18,6 +19,7 @@ In-scope:
 - Atualizar testes focados em ordem e falhas para evitar regressão de fail-fast.
 
 Out-of-scope:
+
 - Lock de arquivo entre processos.
 - Garantias transacionais distribuídas entre artefatos e config.
 - Mudanças no formato `~/.config/seed4j-cli/config.yml`.
@@ -33,11 +35,12 @@ Out-of-scope:
 ## Existing Context
 
 Contexto atual no repositório:
+
 - A porta está em `src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeModeConfigurationRepository.java`.
 - O domínio atualmente usa `RuntimeModeConfigurationDocument` como snapshot de config.
 - Os serviços `RuntimeExtensionInstaller`, `RuntimeExtensionModeEnabler` e `RuntimeExtensionModeDisabler` ainda dependem da sequência explícita `readConfiguration()` e depois `persistMode(...)`.
 - O adapter filesystem está em `src/main/java/com/seed4j/cli/bootstrap/infrastructure/secondary/FileSystemRuntimeModeConfigurationRepository.java` e já centraliza parse/write via helpers secondary.
-- Este plano continua a trilha arquitetural do plano base: `_temporary/ai_agent/seed4j-cli-ai-context/shared/2026-05-26_REFACTOR_runtime-mode-secondary-boundary-enabler-disabler-launcher-exec-plan.md`.
+- Este plano continua a trilha arquitetural do plano base: `_temporary/ai_agent/seed4j-cli-ai-context/shared/done/2026-05-26_REFACTOR_runtime-mode-secondary-boundary-enabler-disabler-launcher-exec-plan.md`.
 
 ## Desired End State
 
@@ -176,10 +179,10 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 - [x] Milestone 2 completed
 - [x] Milestone 2.5 started
 - [x] Milestone 2.5 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
-- [ ] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
+- [x] Milestone 4 started
+- [x] Milestone 4 completed
 
 ### TDD Cycle Log
 
@@ -189,6 +192,7 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 - Cycle 4 | Migrar `RuntimeExtensionModeEnabler` para `prepareModeChange(RuntimeMode.EXTENSION).apply()` preservando fail-fast de config inválida | expected failure: compile quebrada ao exigir `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionModeEnablerTest`) | 🌱 green change: `RuntimeExtensionModeEnabler` migrou para plano preparado/aplicado e testes injetados passaram a validar `prepare/apply` | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes) | 🌀 refactor: sem simplificação necessária no ciclo
 - Cycle 5 | Migrar `RuntimeExtensionModeDisabler` para `prepareModeChange(RuntimeMode.STANDARD).apply()` | expected failure: compile quebrada ao exigir `prepare/apply` no double e, após compilar, falha de asserção (`prepareCalls == 0`) | 🔴 red result: sequência RED em dois passos confirmada (erro de símbolo ausente e depois falha de asserção em `RuntimeExtensionModeDisablerTest`) | 🌱 green change: `RuntimeExtensionModeDisabler` migrou para plano preparado/aplicado e testes injetados passaram a validar `prepare/apply` | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes) | vertical checkpoint (when due): n/a | 🌀 refactor: sem simplificação necessária no ciclo
 - Cycle 6 | Remover duplicidade do protocolo `prepareModeChange(...)` eliminando implementação default na porta | expected failure: novo teste de contrato falha com `Method.isDefault() == true` enquanto a interface ainda expõe implementação default | 🔴 red result: `RuntimeModeConfigurationRepositoryContractTest` falhou como esperado (`isDefault` retornou `true`) | 🌱 green change: removido `default prepareModeChange(...)` da interface, adicionada implementação explícita no double de `Seed4JCliLauncherTest` e assert de que launcher não chama `prepareModeChange(...)` | suite result: `./mvnw -Dtest=RuntimeModeConfigurationRepositoryContractTest,RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest,Seed4JCliLauncherTest test` verde (53 testes) | vertical checkpoint (when due): `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes) | 🌀 refactor: sem simplificação adicional necessária no ciclo
+- Cycle 7 | Consolidar Milestones 3 e 4 com validação focada, validação ampla e atualização de referências cruzadas | expected failure: `npm run prettier:check` falha em arquivos markdown de ExecPlan em `_temporary` | 🔴 red result: `prettier --check .` falhou com 3 arquivos `_temporary/...` fora do padrão | 🌱 green change: formatados os 3 arquivos apontados e atualizados os links quebrados de referência para o plano de 2026-05-26 em `shared/done` | suite result: `./mvnw -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test` verde (22 testes), `./mvnw -Dtest=ExtensionInstallCommandTest test` verde (6 testes), `./mvnw clean verify` verde (459 unit + 6 integration) e `npm run prettier:check` verde | vertical checkpoint (when due): n/a | 🌀 refactor: nenhum ajuste adicional de código de produção necessário
 
 ## Decisions
 
@@ -224,6 +228,10 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
   Rationale: preservar precedência de fail-fast de configuração inválida quando config e artefatos estão inválidos simultaneamente.
   Date/Author: 2026-05-27 / Renan + Codex
 
+- Decision: Corrigir referência do plano base de 2026-05-26 para o arquivo arquivado em `shared/done`.
+  Rationale: evitar link quebrado durante handoff e manter trilha de execução rastreável.
+  Date/Author: 2026-05-28 / Renan + Codex
+
 ## Risks and Mitigations
 
 - Risk: mudar nomes de porta quebrar doubles de teste em vários arquivos.
@@ -238,6 +246,9 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 - Risk: ambiguidade de semântica em `apply()` (parecer idempotente sem ser).
   Mitigation: documentar no tipo de domínio que o plano representa snapshot preparado para aplicação única por fluxo.
 
+- Risk: `npm run prettier:check` falhar por arquivos de ExecPlan em `_temporary` mesmo quando o código Java está correto.
+  Mitigation: incluir a verificação/formatação de markdown de `_temporary` no fechamento do slice antes de marcar milestone concluído.
+
 ## Validation Strategy
 
 1. Rodar testes focados de domínio: installer, enabler e disabler.
@@ -248,10 +259,12 @@ Fechar o slice com validação ampla e atualização documental para handoff seg
 ## Rollout and Recovery
 
 Rollout:
+
 1. Entregar como refactor interno sem mudança de contrato CLI.
 2. Revisar diff final para garantir que somente protocolo interno mudou.
 
 Recovery:
+
 1. Reverter commits deste plano caso apareça regressão de ordem/fail-fast.
 2. Se regressão ficar isolada em enable/disable, manter installer no novo protocolo e rollback seletivo dos serviços afetados.
 
@@ -260,3 +273,4 @@ Recovery:
 - Nome de API impacta expectativa de consistência; `apply` foi preferido por ser forte sem insinuar transação completa.
 - Acoplamento temporal não some; ele deve ser explicitado em protocolo de domínio para reduzir erro de uso.
 - Testes focados de ordem são essenciais quando o objetivo é segurança de orquestração e não feature nova.
+- Em repositórios onde `prettier --check .` inclui `_temporary`, o fechamento do plano precisa validar formatação desses documentos para não gerar falso negativo no gate final.
