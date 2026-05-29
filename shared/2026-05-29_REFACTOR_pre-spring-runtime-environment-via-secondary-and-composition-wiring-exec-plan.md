@@ -70,20 +70,20 @@ Remover de `Seed4JCliApp` a responsabilidade de ler propriedades do sistema e re
 
 #### Changes
 
-- [ ] Criar `src/main/java/com/seed4j/cli/bootstrap/infrastructure/secondary/CurrentProcessPreSpringRuntimeEnvironmentProvider.java`.
-- [ ] Mover para essa classe a leitura de system properties, resolução de `javaExecutablePath`, resolução de executable path e fallback `0.0.0-SNAPSHOT`.
-- [ ] Mover os testes de resolução de executable path de `Seed4JCliAppTest` para `CurrentProcessPreSpringRuntimeEnvironmentProviderTest`.
-- [ ] Garantir que `Seed4JCliApp` não chame `System.getProperty(...)`.
+- [x] Criar `src/main/java/com/seed4j/cli/bootstrap/infrastructure/secondary/CurrentProcessPreSpringRuntimeEnvironmentProvider.java`.
+- [x] Mover para essa classe a leitura de system properties, resolução de `javaExecutablePath`, resolução de executable path e fallback `0.0.0-SNAPSHOT`.
+- [x] Mover os testes de resolução de executable path de `Seed4JCliAppTest` para `CurrentProcessPreSpringRuntimeEnvironmentProviderTest`.
+- [x] Garantir que `Seed4JCliApp` não chame `System.getProperty(...)`.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=CurrentProcessPreSpringRuntimeEnvironmentProviderTest,Seed4JCliAppTest test`
-- [ ] Expected result: testes verdes; resolução por code source, `sun.java.command` relativo/absoluto e classpath continua coberta.
+- [x] Command: `./mvnw -Dtest=CurrentProcessPreSpringRuntimeEnvironmentProviderTest,Seed4JCliAppTest test`
+- [x] Expected result: testes verdes; resolução por code source, `sun.java.command` relativo/absoluto e classpath continua coberta.
 
 #### Acceptance Criteria
 
-- [ ] Leituras `System.getProperty(...)` do bootstrap pré-Spring ficam no secondary adapter.
-- [ ] `Seed4JCliApp` deixa de conhecer `user.home`, `java.home`, `user.dir`, `sun.java.command`, `java.class.path` e `seed4j.cli.runtime.child`.
+- [x] Leituras `System.getProperty(...)` do bootstrap pré-Spring ficam no secondary adapter.
+- [x] `Seed4JCliApp` deixa de conhecer `user.home`, `java.home`, `user.dir`, `sun.java.command`, `java.class.path` e `seed4j.cli.runtime.child`.
 
 ### Milestone 3 - Consolidar composition e preservar primary
 
@@ -144,8 +144,8 @@ Confirmar que o refactor não alterou comportamento observável.
 - [x] ExecPlan drafted
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
 - [ ] Milestone 3 started
 - [ ] Milestone 3 completed
 - [ ] Milestone 4 started
@@ -171,6 +171,10 @@ Confirmar que o refactor não alterou comportamento observável.
 
 - Decision: durante o Milestone 1, o primary cria um `PreSpringRuntimeEnvironmentProvider` ad-hoc por chamada para manter comportamento atual até o adapter secondary dedicado do Milestone 2.
   Rationale: preserva o loop TDD do milestone e evita antecipar responsabilidade de leitura de ambiente antes do secondary adapter existir.
+  Date/Author: 2026-05-29 / Renan + Codex
+
+- Decision: no Milestone 2, `PreSpringLauncherAssembler` passou a receber `PreSpringRuntimeEnvironment` explícito e deixou de ler `java.home` diretamente.
+  Rationale: elimina leitura de `System.getProperty(...)` fora do secondary adapter sem antecipar a remoção do primary planejada para o Milestone 3.
   Date/Author: 2026-05-29 / Renan + Codex
 
 ## Risks and Mitigations
@@ -214,3 +218,4 @@ Recovery:
 - Leituras de ambiente do processo são infraestrutura externa quando o application precisa delas para orquestrar o caso de uso.
 - Manter o primary explícito melhora a leitura da fronteira entre `Seed4JCliApp` e o módulo `bootstrap`.
 - O passo intermediário com provider ad-hoc no primary permite migrar o contract da application sem quebrar o comportamento observável antes do Milestone 2.
+- Em execuções focadas de testes, `jacoco:report` pode falhar transitoriamente com `EOFException`; repetir o mesmo comando confirmou estabilidade antes de tratar como regressão real.
