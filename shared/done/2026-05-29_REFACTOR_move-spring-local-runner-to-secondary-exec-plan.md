@@ -11,6 +11,7 @@ The bootstrap domain currently contains Spring Boot technical contracts and comp
 ## Scope
 
 In scope:
+
 - Move local Spring execution implementation from domain/composition into secondary classes:
   - `SpringBootLocalCliRunner`
   - `SpringApplicationBuilderAdapter`
@@ -20,6 +21,7 @@ In scope:
 - Preserve existing behavior and tests through equivalent or improved coverage.
 
 Out of scope:
+
 - Redesigning `PreSpringBootstrapApplicationService`.
 - Moving `JavaProcessChildLauncher` or `ChildProcessLauncher` out of domain.
 - Runtime-mode protocol redesign.

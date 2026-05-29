@@ -51,7 +51,7 @@ Out-of-scope:
 
 ## Current Repository Snapshot
 
-Estado observado em 2026-05-29:
+Estado atualizado em 2026-05-29:
 
 - `src/main/java/com/seed4j/cli/Seed4JCliApp.java` expõe `productionBootstrapExitCodeResolver()` e delega para `PreSpringBootstrapConfiguration.preSpringBootstrapRunner()::exitCodeFor`.
 - `src/main/java/com/seed4j/cli/bootstrap/infrastructure/primary/PreSpringBootstrapRunner.java` recebe `String[] args`, cria `PreSpringBootstrapCommand` e delega para `PreSpringBootstrapApplicationService`.
@@ -59,10 +59,10 @@ Estado observado em 2026-05-29:
 - `PreSpringRuntimeEnvironment` e `PreSpringRuntimeEnvironmentReader` estão atualmente em `bootstrap/domain`.
 - `src/main/java/com/seed4j/cli/bootstrap/composition/PreSpringBootstrapConfiguration.java` monta `CurrentProcessPreSpringRuntimeEnvironmentReader`, `SpringBootLocalCliRunner`, `JavaChildProcessCommandExecutor`, `FileSystemRuntimeModeConfigurationRepository`, `Seed4JCliLauncherFactory` e `PreSpringBootstrapRunner`.
 - `src/main/java/com/seed4j/cli/bootstrap/domain/Seed4JCliLauncherFactory.java` já recebe `RuntimeModeConfigurationRepository` por parâmetro e não importa adapters secondary.
-- `src/main/java/com/seed4j/cli/command/infrastructure/primary/ExtensionInstallCommand.java` ainda instancia `RuntimeExtensionInstaller`, `FileSystemRuntimeModeConfigurationRepository` e `FileSystemRuntimeExtensionArtifactsRepository` no construtor.
+- `src/main/java/com/seed4j/cli/command/infrastructure/primary/ExtensionInstallCommand.java` recebe `RuntimeExtensionApplicationService` por construtor e não instancia adapters de filesystem.
 - `RuntimeExtensionInstaller`, `RuntimeExtensionModeEnabler` e `RuntimeExtensionModeDisabler` já existem em `bootstrap/domain`.
-- Ainda não existe `RuntimeExtensionApplicationService` em `bootstrap/application`.
-- Ainda não existe configuração Spring de runtime extension para expor `RuntimeModeConfigurationRepository`, `RuntimeExtensionArtifactsRepository` e `RuntimeExtensionApplicationService` como beans.
+- `src/main/java/com/seed4j/cli/bootstrap/application/RuntimeExtensionApplicationService.java` existe em `bootstrap/application`, recebe `Path userHome` e portas no construtor, e delega `install(...)` para `RuntimeExtensionInstaller`.
+- `src/main/java/com/seed4j/cli/bootstrap/composition/RuntimeExtensionApplicationConfiguration.java` expõe beans de `RuntimeModeConfigurationRepository`, `RuntimeExtensionArtifactsRepository` e `RuntimeExtensionApplicationService`.
 - Ainda não existem `ExtensionEnableCommand` nem `ExtensionDisableCommand` no código atual.
 
 Premissas obsoletas da versão anterior do plano:
@@ -253,14 +253,27 @@ Expected result: comando executa com exit code `0` e saída de versão compatív
 - [x] Milestone 1 original completed before repository refresh
 - [x] Repository baseline refreshed on 2026-05-29
 - [x] Milestone 0 completed
-- [ ] Milestone 1 audit started
-- [ ] Milestone 1 audit completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
-- [ ] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 1 audit started
+- [x] Milestone 1 audit completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
+- [x] Milestone 4 started
+- [x] Milestone 4 completed
+
+Execução desta rodada (TDD estrito autônomo):
+
+- `Cycle 1 | Introduzir RuntimeExtensionApplicationService.install delegando via portas | expected failure: compilação por classe ausente | 🔴 red result: RuntimeExtensionApplicationService not found | 🌱 green change: criar bootstrap/application/RuntimeExtensionApplicationService | suite result: RuntimeExtensionApplicationServiceTest + RuntimeExtensionInstallerTest verdes | vertical checkpoint: n/a | 🌀 refactor: sem mudanças`
+- `Cycle 2 | Introduzir wiring Spring explícito de runtime extension | expected failure: compilação por configuração ausente | 🔴 red result: RuntimeExtensionApplicationConfiguration not found | 🌱 green change: criar bootstrap/composition/RuntimeExtensionApplicationConfiguration | suite result: testes de configuração/aplicação/domínio verdes | vertical checkpoint: ExtensionInstallCommandTest verde | 🌀 refactor: sem mudanças`
+- `Cycle 3 | Migrar ExtensionInstallCommand para depender de RuntimeExtensionApplicationService | expected failure: incompatibilidade de construtor | 🔴 red result: compile error em ExtensionInstallCommandTest | 🌱 green change: refatorar ExtensionInstallCommand + CliFixture para service injection | suite result: ExtensionInstallCommandTest + Seed4JCommandsFactoryTest verdes | vertical checkpoint: incluso na suíte do ciclo | 🌀 refactor: sem mudanças`
+- `Cycle 4 | Completar comportamentos pendentes dos novos testes de application/composition | expected failure: n/a (fechamento de cobertura comportamental) | 🔴 red result: n/a | 🌱 green change: adicionar testes de propagação de erro e escopo por user home | suite result: suíte focada combinada verde | vertical checkpoint: incluso na suíte do ciclo | 🌀 refactor: formatar arquivos com Prettier`
+
+Validação final da rodada:
+
+- `./mvnw clean verify`: verde (na segunda execução; primeira execução falhou de forma transitória com `ClassNotFoundException` do surefire para `RuntimeExtensionApplicationServiceTest` após `clean`, sem reproduzir no rerun).
+- `npm run prettier:check`: verde.
+- `seed4j --version`: exit code `0`; saída `Seed4J CLI v0.0.1-SNAPSHOT` e `Seed4J version: 1.34.0`.
 
 Historical execution notes from the original Milestone 1:
 
@@ -274,8 +287,8 @@ Repository refresh notes (2026-05-29):
 - Current primary adapter is `PreSpringBootstrapRunner`.
 - Current app entry method is `productionBootstrapExitCodeResolver()`.
 - Runtime extension domain services for `install`, `enable` and `disable` exist, but only `install` is in scope for this refactor.
-- Runtime extension install application service and Spring wiring are still pending.
-- `ExtensionInstallCommand` is the main remaining primary-adapter composition leak.
+- Runtime extension install application service e wiring Spring explícito foram implementados.
+- `ExtensionInstallCommand` foi migrado para depender de `RuntimeExtensionApplicationService`, removendo composição técnica do adapter primário.
 
 ## Decisions
 

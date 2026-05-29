@@ -11,6 +11,7 @@ O objetivo é manter o comportamento observável do CLI igual, mas corrigir a fr
 ## Scope
 
 In-scope:
+
 - Mover leitura de `user.home`, `java.home`, `user.dir`, `sun.java.command`, `java.class.path` e `seed4j.cli.runtime.child` para um adapter secondary.
 - Mover resolução de executable path e versão atual para o mesmo adapter de ambiente do processo.
 - Consolidar `bootstrap/composition` em uma única classe de composição.
@@ -19,6 +20,7 @@ In-scope:
 - Basear a nomeação de classes, tipos e portas deste refactor no módulo `module` do projeto `seed4j`, consultando diretamente `/home/renanfranca/projects/seed4j/src/main/java/com/seed4j/module`.
 
 Out-of-scope:
+
 - Alterar regras de domínio em `Seed4JCliLauncher`.
 - Refatorar comandos pós-Spring (`extension install`, `enable`, `disable`).
 - Alterar mensagens, opções CLI ou contrato de `seed4j --version`.
@@ -212,11 +214,13 @@ Confirmar que o refactor não alterou comportamento observável.
 ## Rollout and Recovery
 
 Rollout:
+
 1. Implementar em milestones pequenos e manter o plano atualizado.
 2. Validar o fluxo focado antes da verificação completa.
 3. Publicar sem mudança de contrato funcional do CLI.
 
 Recovery:
+
 1. Se `Seed4JCliApp` falhar, reverter Milestone 3.
 2. Se resolução de paths falhar, reverter Milestone 2.
 3. Se contratos de application ficarem instáveis, reverter Milestone 1.
