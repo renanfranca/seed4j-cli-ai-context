@@ -1,0 +1,211 @@
+# Refatorar ambiente pré-Spring para porta secondary e composição manual
+
+This ExecPlan is a living document. Keep `Progress`, `Decisions`, `Risks`, and `Lessons Learned` up to date as work advances.
+
+Safety boundary: This task is limited to authorized, defensive maintenance of this repository. Do not provide offensive guidance or policy-bypassing instructions.
+
+## Purpose / Big Picture
+
+O objetivo é manter o comportamento observável do CLI igual, mas corrigir a fronteira arquitetural do bootstrap pré-Spring. `Seed4JCliApp` deve continuar sendo cliente fino do módulo `bootstrap`; `PreSpringLauncherAssembler` deve ser o adapter primário; leituras de ambiente do processo via `System.getProperty(...)` devem ficar em um adapter secondary acessado por uma porta de `application`; `bootstrap/composition` deve apenas montar objetos, como o Spring faria em runtime normal.
+
+## Scope
+
+In-scope:
+- Mover leitura de `user.home`, `java.home`, `user.dir`, `sun.java.command`, `java.class.path` e `seed4j.cli.runtime.child` para um adapter secondary.
+- Mover resolução de executable path e versão atual para o mesmo adapter de ambiente do processo.
+- Consolidar `bootstrap/composition` em uma única classe de composição.
+- Manter `PreSpringLauncherAssembler` como adapter primário.
+- Atualizar testes do bootstrap pré-Spring.
+
+Out-of-scope:
+- Alterar regras de domínio em `Seed4JCliLauncher`.
+- Refatorar comandos pós-Spring (`extension install`, `enable`, `disable`).
+- Alterar mensagens, opções CLI ou contrato de `seed4j --version`.
+
+## Definitions
+
+- Pré-Spring: código executado antes de `SpringApplicationBuilder.run(...)`.
+- Primary adapter: adapter que recebe a entrada externa e dirige o caso de uso. Aqui: `PreSpringLauncherAssembler`.
+- Secondary adapter: adapter chamado pelo caso de uso para acessar infraestrutura externa. Aqui: ambiente do processo, filesystem, processo filho.
+- Composition: pacote responsável apenas por instanciar e conectar objetos concretos.
+
+## Existing Context
+
+`Seed4JCliApp` hoje lê propriedades do processo e resolve executable path antes de chamar `PreSpringLauncherAssembler`. `PreSpringLauncherAssembler` recebe `userHomePath`, `executablePath`, versão, `childMode` e `args`, monta `PreSpringBootstrapCommand` e chama `PreSpringBootstrapApplicationService`. `InfrastructurePreSpringLauncherFactory` está em `bootstrap/composition`, mas o nome é ruim e a classe cobre só parte da composição do fluxo.
+
+## Desired End State
+
+`Seed4JCliApp` chama apenas um resolver de exit code ligado ao primary adapter. `PreSpringLauncherAssembler` recebe só `String[] args` e cria um command de entrada. `PreSpringBootstrapApplicationService` consome uma porta `PreSpringRuntimeEnvironmentProvider`, obtém o ambiente atual, cria o launcher e executa. `bootstrap/composition` terá uma única classe, `PreSpringBootstrapComposition`, que monta o grafo concreto sem ler `System.getProperty(...)`.
+
+## Milestones
+
+### Milestone 1 - Introduzir porta de ambiente pré-Spring
+
+#### Goal
+
+Modelar o ambiente do processo como dependência secondary do caso de uso, sem mudar comportamento.
+
+#### Changes
+
+- [ ] Criar `src/main/java/com/seed4j/cli/bootstrap/application/PreSpringRuntimeEnvironment.java` como record com `userHomePath`, `executablePath`, `currentSeed4JVersion`, `childMode`, `javaExecutablePath`.
+- [ ] Criar `src/main/java/com/seed4j/cli/bootstrap/application/PreSpringRuntimeEnvironmentProvider.java` com método `current()`.
+- [ ] Reduzir `PreSpringBootstrapCommand` para conter apenas `String[] args`.
+- [ ] Alterar `PreSpringLauncherFactory.create(...)` para receber também `javaExecutablePath`.
+
+#### Validation
+
+- [ ] Command: `./mvnw -Dtest=PreSpringBootstrapApplicationServiceTest test`
+- [ ] Expected result: teste verde provando que o service obtém ambiente pela porta e delega `args`, `childMode`, paths e versão ao launcher.
+
+#### Acceptance Criteria
+
+- [ ] Dados de ambiente não entram mais no command vindo do primary.
+- [ ] O service depende de uma porta explícita para ambiente do processo.
+
+### Milestone 2 - Criar secondary adapter para o ambiente do processo
+
+#### Goal
+
+Remover de `Seed4JCliApp` a responsabilidade de ler propriedades do sistema e resolver executable path.
+
+#### Changes
+
+- [ ] Criar `src/main/java/com/seed4j/cli/bootstrap/infrastructure/secondary/CurrentProcessPreSpringRuntimeEnvironmentProvider.java`.
+- [ ] Mover para essa classe a leitura de system properties, resolução de `javaExecutablePath`, resolução de executable path e fallback `0.0.0-SNAPSHOT`.
+- [ ] Mover os testes de resolução de executable path de `Seed4JCliAppTest` para `CurrentProcessPreSpringRuntimeEnvironmentProviderTest`.
+- [ ] Garantir que `Seed4JCliApp` não chame `System.getProperty(...)`.
+
+#### Validation
+
+- [ ] Command: `./mvnw -Dtest=CurrentProcessPreSpringRuntimeEnvironmentProviderTest,Seed4JCliAppTest test`
+- [ ] Expected result: testes verdes; resolução por code source, `sun.java.command` relativo/absoluto e classpath continua coberta.
+
+#### Acceptance Criteria
+
+- [ ] Leituras `System.getProperty(...)` do bootstrap pré-Spring ficam no secondary adapter.
+- [ ] `Seed4JCliApp` deixa de conhecer `user.home`, `java.home`, `user.dir`, `sun.java.command`, `java.class.path` e `seed4j.cli.runtime.child`.
+
+### Milestone 3 - Consolidar composition e preservar primary
+
+#### Goal
+
+Fazer `composition` apenas montar o grafo e manter `PreSpringLauncherAssembler` como canal primário.
+
+#### Changes
+
+- [ ] Criar `src/main/java/com/seed4j/cli/bootstrap/composition/PreSpringBootstrapComposition.java`.
+- [ ] Mover para essa classe a montagem de `PreSpringLauncherAssembler`, `PreSpringBootstrapApplicationService`, `CurrentProcessPreSpringRuntimeEnvironmentProvider`, factory de launcher, adapters Spring, `FileSystemRuntimeModeConfigurationRepository` e `JavaChildProcessCommandExecutor`.
+- [ ] Remover `src/main/java/com/seed4j/cli/bootstrap/composition/InfrastructurePreSpringLauncherFactory.java`.
+- [ ] Alterar `PreSpringLauncherAssembler` para receber `PreSpringBootstrapApplicationService` no construtor e expor `exitCodeFor(String[] args)`.
+- [ ] Alterar `Seed4JCliApp` para obter o primary pela composition e chamar o primary, não a composition como canal de caso de uso.
+
+#### Validation
+
+- [ ] Command: `./mvnw -Dtest=PreSpringLauncherAssemblerTest,PreSpringBootstrapCompositionTest,Seed4JCliAppTest test`
+- [ ] Expected result: testes verdes provando `Seed4JCliApp -> primary -> application` e composition apenas como wiring.
+- [ ] Command: `rg -n "System\\.getProperty|InfrastructurePreSpringLauncherFactory" src/main/java/com/seed4j/cli/Seed4JCliApp.java src/main/java/com/seed4j/cli/bootstrap/composition src/main/java/com/seed4j/cli/bootstrap/infrastructure/primary`
+- [ ] Expected result: nenhum match para `System.getProperty` fora do secondary; nenhum match para a classe removida.
+
+#### Acceptance Criteria
+
+- [ ] `bootstrap/composition` tem uma única classe pública de composição.
+- [ ] `PreSpringLauncherAssembler` continua existindo como adapter primário.
+- [ ] Composition não executa o caso de uso; só monta objetos.
+
+### Milestone 4 - Regressão completa do CLI
+
+#### Goal
+
+Confirmar que o refactor não alterou comportamento observável.
+
+#### Changes
+
+- [ ] Atualizar imports, testes e nomes quebrados pela remoção da factory antiga.
+- [ ] Rodar formatação apenas se `prettier:check` indicar divergência.
+
+#### Validation
+
+- [ ] Command: `./mvnw -Dtest=Seed4JCliAppTest,PreSpringBootstrapApplicationServiceTest,PreSpringLauncherAssemblerTest,CurrentProcessPreSpringRuntimeEnvironmentProviderTest,PreSpringBootstrapCompositionTest,Seed4JCliLauncherFactoryTest,Seed4JCliLauncherTest test`
+- [ ] Expected result: testes focados verdes.
+- [ ] Command: `./mvnw clean verify`
+- [ ] Expected result: validação completa verde.
+- [ ] Command: `npm run prettier:check`
+- [ ] Expected result: sem divergências.
+- [ ] Command: `seed4j --version`
+- [ ] Expected result: comando executa com exit code `0` e saída de versão compatível.
+
+#### Acceptance Criteria
+
+- [ ] `seed4j --version` mantém comportamento.
+- [ ] Full verification passa sem regressão.
+
+## Progress
+
+- [x] ExecPlan drafted
+- [ ] Milestone 1 started
+- [ ] Milestone 1 completed
+- [ ] Milestone 2 started
+- [ ] Milestone 2 completed
+- [ ] Milestone 3 started
+- [ ] Milestone 3 completed
+- [ ] Milestone 4 started
+- [ ] Milestone 4 completed
+
+## Decisions
+
+- Decision: `System.getProperty(...)` do bootstrap pré-Spring será lido por secondary adapter.
+  Rationale: ambiente do processo é infraestrutura externa consultada pelo caso de uso, não responsabilidade de composition nem do cliente `Seed4JCliApp`.
+  Date/Author: 2026-05-29 / Renan + Codex
+
+- Decision: `PreSpringBootstrapApplicationService` consumirá `PreSpringRuntimeEnvironmentProvider`.
+  Rationale: preserva o fluxo hexagonal: primary dirige application; application chama portas; secondary implementa infraestrutura.
+  Date/Author: 2026-05-29 / Renan + Codex
+
+- Decision: `bootstrap/composition` terá uma única classe `PreSpringBootstrapComposition`.
+  Rationale: composition deve fazer apenas wiring manual, substituindo o papel que Spring Boot teria no pré-Spring.
+  Date/Author: 2026-05-29 / Renan + Codex
+
+- Decision: `PreSpringLauncherAssembler` será mantido como adapter primário.
+  Rationale: `Seed4JCliApp` é cliente do módulo bootstrap e não deve falar diretamente com composition para executar o caso de uso.
+  Date/Author: 2026-05-29 / Renan + Codex
+
+## Risks and Mitigations
+
+- Risk: confundir composition com canal de execução.
+  Mitigation: `PreSpringBootstrapComposition` expõe apenas método de montagem do primary, não `exitCodeFor(...)`.
+
+- Risk: perda de cobertura ao mover resolução de executable path.
+  Mitigation: migrar testes existentes de `Seed4JCliAppTest` para o teste do secondary adapter no mesmo milestone.
+
+- Risk: regressão em modo extension por mudança em `javaExecutablePath` ou `childMode`.
+  Mitigation: manter semântica atual e rodar testes de launcher além dos testes de bootstrap.
+
+- Risk: dependency cycle conceitual com `Seed4JCliApp.class` usado no Spring builder e code source.
+  Mitigation: manter essa referência restrita à composition e ao secondary adapter de ambiente, nunca ao application.
+
+## Validation Strategy
+
+1. Rodar testes focados por milestone.
+2. Rodar suíte focada de bootstrap e launcher.
+3. Rodar `./mvnw clean verify`.
+4. Rodar `npm run prettier:check`.
+5. Exercitar manualmente `seed4j --version`.
+
+## Rollout and Recovery
+
+Rollout:
+1. Implementar em milestones pequenos e manter o plano atualizado.
+2. Validar o fluxo focado antes da verificação completa.
+3. Publicar sem mudança de contrato funcional do CLI.
+
+Recovery:
+1. Se `Seed4JCliApp` falhar, reverter Milestone 3.
+2. Se resolução de paths falhar, reverter Milestone 2.
+3. Se contratos de application ficarem instáveis, reverter Milestone 1.
+4. Após qualquer rollback parcial, rodar testes focados e `./mvnw clean verify`.
+
+## Lessons Learned
+
+- `composition` no pré-Spring deve substituir apenas o wiring que Spring faria, não virar adapter primário.
+- Leituras de ambiente do processo são infraestrutura externa quando o application precisa delas para orquestrar o caso de uso.
+- Manter o primary explícito melhora a leitura da fronteira entre `Seed4JCliApp` e o módulo `bootstrap`.
