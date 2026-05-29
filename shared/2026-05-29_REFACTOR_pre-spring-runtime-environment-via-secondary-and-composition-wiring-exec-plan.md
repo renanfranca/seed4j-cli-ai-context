@@ -47,20 +47,20 @@ Modelar o ambiente do processo como dependência secondary do caso de uso, sem m
 
 #### Changes
 
-- [ ] Criar `src/main/java/com/seed4j/cli/bootstrap/application/PreSpringRuntimeEnvironment.java` como record com `userHomePath`, `executablePath`, `currentSeed4JVersion`, `childMode`, `javaExecutablePath`.
-- [ ] Criar `src/main/java/com/seed4j/cli/bootstrap/application/PreSpringRuntimeEnvironmentProvider.java` com método `current()`.
-- [ ] Reduzir `PreSpringBootstrapCommand` para conter apenas `String[] args`.
-- [ ] Alterar `PreSpringLauncherFactory.create(...)` para receber também `javaExecutablePath`.
+- [x] Criar `src/main/java/com/seed4j/cli/bootstrap/application/PreSpringRuntimeEnvironment.java` como record com `userHomePath`, `executablePath`, `currentSeed4JVersion`, `childMode`, `javaExecutablePath`.
+- [x] Criar `src/main/java/com/seed4j/cli/bootstrap/application/PreSpringRuntimeEnvironmentProvider.java` com método `current()`.
+- [x] Reduzir `PreSpringBootstrapCommand` para conter apenas `String[] args`.
+- [x] Alterar `PreSpringLauncherFactory.create(...)` para receber também `javaExecutablePath`.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=PreSpringBootstrapApplicationServiceTest test`
-- [ ] Expected result: teste verde provando que o service obtém ambiente pela porta e delega `args`, `childMode`, paths e versão ao launcher.
+- [x] Command: `./mvnw -Dtest=PreSpringBootstrapApplicationServiceTest test`
+- [x] Expected result: teste verde provando que o service obtém ambiente pela porta e delega `args`, `childMode`, paths e versão ao launcher.
 
 #### Acceptance Criteria
 
-- [ ] Dados de ambiente não entram mais no command vindo do primary.
-- [ ] O service depende de uma porta explícita para ambiente do processo.
+- [x] Dados de ambiente não entram mais no command vindo do primary.
+- [x] O service depende de uma porta explícita para ambiente do processo.
 
 ### Milestone 2 - Criar secondary adapter para o ambiente do processo
 
@@ -142,8 +142,8 @@ Confirmar que o refactor não alterou comportamento observável.
 ## Progress
 
 - [x] ExecPlan drafted
-- [ ] Milestone 1 started
-- [ ] Milestone 1 completed
+- [x] Milestone 1 started
+- [x] Milestone 1 completed
 - [ ] Milestone 2 started
 - [ ] Milestone 2 completed
 - [ ] Milestone 3 started
@@ -167,6 +167,10 @@ Confirmar que o refactor não alterou comportamento observável.
 
 - Decision: `PreSpringLauncherAssembler` será mantido como adapter primário.
   Rationale: `Seed4JCliApp` é cliente do módulo bootstrap e não deve falar diretamente com composition para executar o caso de uso.
+  Date/Author: 2026-05-29 / Renan + Codex
+
+- Decision: durante o Milestone 1, o primary cria um `PreSpringRuntimeEnvironmentProvider` ad-hoc por chamada para manter comportamento atual até o adapter secondary dedicado do Milestone 2.
+  Rationale: preserva o loop TDD do milestone e evita antecipar responsabilidade de leitura de ambiente antes do secondary adapter existir.
   Date/Author: 2026-05-29 / Renan + Codex
 
 ## Risks and Mitigations
@@ -209,3 +213,4 @@ Recovery:
 - `composition` no pré-Spring deve substituir apenas o wiring que Spring faria, não virar adapter primário.
 - Leituras de ambiente do processo são infraestrutura externa quando o application precisa delas para orquestrar o caso de uso.
 - Manter o primary explícito melhora a leitura da fronteira entre `Seed4JCliApp` e o módulo `bootstrap`.
+- O passo intermediário com provider ad-hoc no primary permite migrar o contract da application sem quebrar o comportamento observável antes do Milestone 2.
