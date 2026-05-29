@@ -1,4 +1,4 @@
-# Refatorar bootstrap pré-Spring e runtime extension application service
+# Refatorar bootstrap pré-Spring e runtime extension install application service
 
 This ExecPlan is a living document. Keep `Progress`, `Decisions`, `Risks`, and `Lessons Learned` up to date as work advances.
 
@@ -10,9 +10,9 @@ Safety boundary: This task is limited to authorized, defensive maintenance of th
 
 O objetivo original era separar orquestração pré-Spring de composição técnica e, em seguida, mover a orquestração de runtime extension para application. O repositório mudou desde a primeira versão deste plano: a parte pré-Spring já foi refatorada novamente e agora usa `PreSpringBootstrapRunner` como adapter primário, `PreSpringBootstrapApplicationService` como orquestrador e `PreSpringBootstrapConfiguration` como composição manual.
 
-O objetivo atualizado é preservar essa arquitetura pré-Spring atual, sem reintroduzir o antigo `PreSpringLauncherAssembler`, e concluir o que ainda está pendente: criar um `RuntimeExtensionApplicationService` único para `install`, `enable` e `disable`, com wiring Spring explícito para que comandos pós-Spring não instanciem adapters de filesystem diretamente.
+O objetivo atualizado é preservar essa arquitetura pré-Spring atual, sem reintroduzir o antigo `PreSpringLauncherAssembler`, e concluir o que ainda está pendente para o refactor: criar um `RuntimeExtensionApplicationService` focado em `install`, com wiring Spring explícito para que comandos pós-Spring não instanciem adapters de filesystem diretamente.
 
-Para o usuário final, o comportamento deve continuar igual no startup do CLI e em `seed4j extension install`. Os métodos `enable` e `disable` no application service devem preparar a integração com os comandos planejados em outro ExecPlan, sem mudar o escopo público deste refactor.
+Para o usuário final, o comportamento deve continuar igual no startup do CLI e em `seed4j extension install`. Métodos de application service para `enable` e `disable` ficam fora deste refactor porque pertencem à implementação futura da feature de habilitar/desabilitar runtime extension.
 
 ## Scope
 
@@ -22,7 +22,7 @@ In-scope:
 - Manter `PreSpringBootstrapConfiguration` em `bootstrap/composition` como wiring manual pré-Spring.
 - Manter `PreSpringBootstrapRunner` em `bootstrap/infrastructure/primary` como adapter primário.
 - Manter `Seed4JCliLauncherFactory` no domínio sem import de `bootstrap/infrastructure/secondary`.
-- Introduzir `bootstrap/application/RuntimeExtensionApplicationService` único para `install`, `enable` e `disable`.
+- Introduzir `bootstrap/application/RuntimeExtensionApplicationService` para `install`.
 - Fazer o application service receber portas (`RuntimeModeConfigurationRepository`, `RuntimeExtensionArtifactsRepository`) e `Path userHome`, criando internamente os serviços de domínio.
 - Criar wiring Spring explícito para runtime extension, preferencialmente em `bootstrap/composition`, para expor beans de portas e application service.
 - Refatorar `ExtensionInstallCommand` para depender do application service.
@@ -34,6 +34,8 @@ Out-of-scope:
 - Alterar contrato funcional de runtime mode no launcher.
 - Introduzir bypass de validação no bootstrap.
 - Criar os comandos públicos `seed4j extension enable` e `seed4j extension disable`; isso permanece no ExecPlan dedicado de enable/disable.
+- Adicionar métodos `Path enable()` e `Path disable()` ao `RuntimeExtensionApplicationService`; isso pertence à feature futura de enable/disable.
+- Orquestrar `RuntimeExtensionModeEnabler` ou `RuntimeExtensionModeDisabler` na camada application neste refactor.
 - Redesenhar comandos não relacionados em `command/infrastructure/primary`.
 - Mudar formato do arquivo `~/.config/seed4j-cli/config.yml`.
 - Mover `PreSpringRuntimeEnvironment` ou `PreSpringRuntimeEnvironmentReader` de pacote neste plano.
@@ -45,7 +47,7 @@ Out-of-scope:
 - Composition: pacote responsável por montar objetos concretos. No baseline atual: `bootstrap/composition/PreSpringBootstrapConfiguration`.
 - Porta: interface usada para inversão de dependência, como `RuntimeModeConfigurationRepository` e `RuntimeExtensionArtifactsRepository`.
 - Adapter secondary: implementação técnica de porta, como `FileSystemRuntimeModeConfigurationRepository` e `FileSystemRuntimeExtensionArtifactsRepository`.
-- Application service de runtime extension: serviço da camada de aplicação que orquestra `install`, `enable` e `disable` criando os serviços de domínio internamente.
+- Application service de runtime extension install: serviço da camada de aplicação que orquestra `install` criando o serviço de domínio internamente.
 
 ## Current Repository Snapshot
 
@@ -74,8 +76,8 @@ Premissas obsoletas da versão anterior do plano:
 - A trilha pré-Spring atual permanece estável: `Seed4JCliApp -> PreSpringBootstrapRunner -> PreSpringBootstrapApplicationService`, com wiring em `PreSpringBootstrapConfiguration`.
 - `PreSpringBootstrapConfiguration` continua sendo composição manual e não vira canal de execução de caso de uso.
 - `Seed4JCliLauncherFactory` continua sem dependência para `bootstrap/infrastructure/secondary`.
-- `RuntimeExtensionApplicationService` existe em `bootstrap/application` com métodos para `install`, `enable` e `disable`.
-- `RuntimeExtensionApplicationService` recebe `Path userHome`, `RuntimeModeConfigurationRepository` e `RuntimeExtensionArtifactsRepository`, e instancia internamente `RuntimeExtensionInstaller`, `RuntimeExtensionModeEnabler` e `RuntimeExtensionModeDisabler`.
+- `RuntimeExtensionApplicationService` existe em `bootstrap/application` com método para `install`.
+- `RuntimeExtensionApplicationService` recebe `Path userHome`, `RuntimeModeConfigurationRepository` e `RuntimeExtensionArtifactsRepository`, e instancia internamente `RuntimeExtensionInstaller`.
 - O wiring Spring cria beans concretos para as portas e para o application service.
 - `ExtensionInstallCommand` depende de `RuntimeExtensionApplicationService` e não instancia adapters de filesystem.
 - Comportamento observável de `seed4j extension install` permanece compatível, incluindo mensagens e exit codes.
@@ -93,7 +95,7 @@ Sincronizar este plano com o repositório atual antes de qualquer nova alteraç�
 - [x] Atualizar contexto pré-Spring para `PreSpringBootstrapRunner`, `PreSpringBootstrapApplicationService` e `PreSpringBootstrapConfiguration`.
 - [x] Marcar `PreSpringLauncherAssembler` como premissa obsoleta.
 - [x] Registrar que `ExtensionInstallCommand` ainda faz composição manual de adapters.
-- [x] Registrar que serviços de domínio de `install`, `enable` e `disable` já existem.
+- [x] Registrar que serviços de domínio de `install`, `enable` e `disable` já existem, mas que apenas `install` entra neste refactor.
 
 #### Validation
 
@@ -139,11 +141,11 @@ Expected result: nenhum match para `PreSpringLauncherAssembler`; nenhum import d
 3. `PreSpringBootstrapConfiguration` permanece composição manual.
 4. Não há dependência `bootstrap/domain -> bootstrap/infrastructure/secondary`.
 
-### Milestone 2 - Introduzir application service único para runtime extension
+### Milestone 2 - Introduzir application service para runtime extension install
 
 #### Goal
 
-Concentrar a orquestração de `install`, `enable` e `disable` na camada `application`, recebendo portas e valores técnicos, sem misturar comando CLI com composição técnica.
+Concentrar a orquestração de `install` na camada `application`, recebendo portas e valores técnicos, sem misturar comando CLI com composição técnica.
 
 #### Changes
 
@@ -151,13 +153,9 @@ Editar/criar os seguintes arquivos:
 
 1. Criar `src/main/java/com/seed4j/cli/bootstrap/application/RuntimeExtensionApplicationService.java` com:
    - construtor recebendo `Path userHome`, `RuntimeModeConfigurationRepository`, `RuntimeExtensionArtifactsRepository`;
-   - método `RuntimeExtensionInstallResult install(RuntimeExtensionInstallRequest request)`;
-   - método `Path enable()`;
-   - método `Path disable()`.
+   - método `RuntimeExtensionInstallResult install(RuntimeExtensionInstallRequest request)`.
 2. O service deve criar internamente:
-   - `RuntimeExtensionInstaller` para `install`;
-   - `RuntimeExtensionModeEnabler` para `enable`;
-   - `RuntimeExtensionModeDisabler` para `disable`.
+   - `RuntimeExtensionInstaller` para `install`.
 3. Criar `src/test/java/com/seed4j/cli/bootstrap/application/RuntimeExtensionApplicationServiceTest.java` cobrindo delegação e wiring de portas sem repetir todas as regras já cobertas nos testes de domínio.
 4. Criar configuração Spring em `src/main/java/com/seed4j/cli/bootstrap/composition/RuntimeExtensionApplicationConfiguration.java` ou nome equivalente alinhado ao projeto, com beans para:
    - `Path userHome` ou factory interna baseada em `@Value("${user.home}")`;
@@ -168,15 +166,15 @@ Editar/criar os seguintes arquivos:
 
 #### Validation
 
-Command: `./mvnw -Dtest=RuntimeExtensionApplicationServiceTest,RuntimeExtensionInstallerTest,RuntimeExtensionModeEnablerTest,RuntimeExtensionModeDisablerTest test`
+Command: `./mvnw -Dtest=RuntimeExtensionApplicationServiceTest,RuntimeExtensionInstallerTest test`
 Expected result: service de aplicação delega corretamente e regras de domínio continuam cobertas pelos testes existentes.
 
 #### Acceptance Criteria
 
 1. `RuntimeExtensionApplicationService` está em `bootstrap/application`.
 2. O service recebe portas/interfaces, não adapters concretos.
-3. O service não contém regra de domínio complexa; ele apenas orquestra criação e chamada dos serviços de domínio.
-4. `install`, `enable` e `disable` usam a mesma fonte de `userHome` e `RuntimeModeConfigurationRepository`.
+3. O service não contém regra de domínio complexa; ele apenas orquestra criação e chamada do serviço de domínio de install.
+4. `RuntimeExtensionApplicationService` não expõe `enable()` nem `disable()`.
 
 ### Milestone 3 - Refatorar comando `extension install` para usar application service
 
@@ -275,8 +273,8 @@ Repository refresh notes (2026-05-29):
 - Current pre-Spring composition class is `PreSpringBootstrapConfiguration`; there is no `PreSpringLauncherAssembler`.
 - Current primary adapter is `PreSpringBootstrapRunner`.
 - Current app entry method is `productionBootstrapExitCodeResolver()`.
-- Runtime extension domain services for `install`, `enable` and `disable` exist.
-- Runtime extension application service and Spring wiring are still pending.
+- Runtime extension domain services for `install`, `enable` and `disable` exist, but only `install` is in scope for this refactor.
+- Runtime extension install application service and Spring wiring are still pending.
 - `ExtensionInstallCommand` is the main remaining primary-adapter composition leak.
 
 ## Decisions
@@ -293,16 +291,16 @@ Repository refresh notes (2026-05-29):
   Rationale: Spring is not available before bootstrap, so this package replaces container wiring without becoming an application service.
   Date/Author: 2026-05-29 / Renan + Codex
 
-- Decision: Use a single `RuntimeExtensionApplicationService` for `install`, `enable` and `disable`.
-  Rationale: the three operations share `userHome`, runtime mode configuration and runtime artifact boundaries; a single service is enough while rules remain thin orchestration.
-  Date/Author: 2026-05-27, refreshed 2026-05-29 / Renan + Codex
+- Decision: `RuntimeExtensionApplicationService` exposes only `install` in this refactor.
+  Rationale: adding `enable()` and `disable()` would implement part of the future enable/disable feature, so those methods should be introduced when that feature is actually executed.
+  Date/Author: 2026-05-29 / Renan + Codex
 
 - Decision: Application service receives ports/interfaces, not concrete filesystem adapters.
   Rationale: keeps adapter selection in composition/Spring wiring and avoids primary adapters doing technical composition.
   Date/Author: 2026-05-27, refreshed 2026-05-29 / Renan + Codex
 
-- Decision: Do not include public `extension enable` and `extension disable` commands in this ExecPlan.
-  Rationale: another active ExecPlan owns the CLI feature; this plan should only create the shared application service needed by that feature.
+- Decision: Do not include public `extension enable`/`extension disable` commands or application methods in this ExecPlan.
+  Rationale: another ExecPlan owns the feature; this plan should only clean up the current `extension install` composition leak.
   Date/Author: 2026-05-29 / Renan + Codex
 
 ## Risks and Mitigations
@@ -311,7 +309,7 @@ Repository refresh notes (2026-05-29):
   Mitigation: treat `PreSpringBootstrapConfiguration` as the canonical pre-Spring wiring point.
 
 - Risk: `RuntimeExtensionApplicationService` becoming a domain rules dump.
-  Mitigation: keep domain behavior inside `RuntimeExtensionInstaller`, `RuntimeExtensionModeEnabler` and `RuntimeExtensionModeDisabler`; service only orchestrates.
+  Mitigation: keep domain behavior inside `RuntimeExtensionInstaller`; do not add `enable()` or `disable()` until the corresponding feature is executed.
 
 - Risk: Spring bean wiring introduces ambiguous `Path` beans or unclear `userHome` ownership.
   Mitigation: avoid broad generic `Path` beans if possible; create service through an explicit `@Bean` method receiving `@Value("${user.home}") String userHomePath`.
@@ -325,7 +323,7 @@ Repository refresh notes (2026-05-29):
 ## Validation Strategy
 
 1. Run focused bootstrap audit tests after any pre-Spring touch.
-2. Run `RuntimeExtensionApplicationServiceTest` plus existing domain tests after introducing the application service.
+2. Run `RuntimeExtensionApplicationServiceTest` plus existing install domain tests after introducing the application service.
 3. Run `ExtensionInstallCommandTest` and `Seed4JCommandsFactoryTest` after command migration.
 4. Run `./mvnw clean verify`.
 5. Run `npm run prettier:check`.
@@ -353,4 +351,4 @@ Recovery:
 - The current repository uses `composition` as the pre-Spring replacement for container wiring; using an `Assembler` name here is now misleading.
 - Keeping `PreSpringBootstrapRunner` explicit makes the `Seed4JCliApp` boundary clearer than calling application services directly from the app class.
 - The next valuable cleanup is no longer in launcher creation; it is in moving runtime extension command orchestration out of primary adapters.
-- A single runtime extension application service is acceptable while it only coordinates existing domain services and shared ports.
+- A runtime extension application service should grow only with the feature currently being implemented; exposing `enable()`/`disable()` before the CLI feature would blur refactor and feature scope.
