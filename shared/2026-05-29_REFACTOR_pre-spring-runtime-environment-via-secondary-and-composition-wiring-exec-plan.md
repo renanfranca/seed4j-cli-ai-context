@@ -16,6 +16,7 @@ In-scope:
 - Consolidar `bootstrap/composition` em uma única classe de composição.
 - Manter `PreSpringLauncherAssembler` como adapter primário.
 - Atualizar testes do bootstrap pré-Spring.
+- Basear a nomeação de classes, tipos e portas deste refactor no módulo `module` do projeto `seed4j`, consultando diretamente `/home/renanfranca/projects/seed4j/src/main/java/com/seed4j/module`.
 
 Out-of-scope:
 - Alterar regras de domínio em `Seed4JCliLauncher`.
@@ -28,6 +29,7 @@ Out-of-scope:
 - Primary adapter: adapter que recebe a entrada externa e dirige o caso de uso. Aqui: `PreSpringLauncherAssembler`.
 - Secondary adapter: adapter chamado pelo caso de uso para acessar infraestrutura externa. Aqui: ambiente do processo, filesystem, processo filho.
 - Composition: pacote responsável apenas por instanciar e conectar objetos concretos.
+- Referência de nomeação: o módulo `module` do projeto `seed4j` no caminho `/home/renanfranca/projects/seed4j/src/main/java/com/seed4j/module` é a fonte de verdade para nomes de novos tipos deste plano.
 
 ## Existing Context
 
@@ -175,6 +177,10 @@ Confirmar que o refactor não alterou comportamento observável.
 
 - Decision: no Milestone 2, `PreSpringLauncherAssembler` passou a receber `PreSpringRuntimeEnvironment` explícito e deixou de ler `java.home` diretamente.
   Rationale: elimina leitura de `System.getProperty(...)` fora do secondary adapter sem antecipar a remoção do primary planejada para o Milestone 3.
+  Date/Author: 2026-05-29 / Renan + Codex
+
+- Decision: a nomeação de novos tipos deste refactor deve seguir o padrão adotado no módulo `module` de `seed4j`, com consulta direta ao caminho `/home/renanfranca/projects/seed4j/src/main/java/com/seed4j/module` antes de fechar nomes.
+  Rationale: reduz deriva de vocabulário entre projetos e mantém consistência arquitetural entre `seed4j-cli` e `seed4j`.
   Date/Author: 2026-05-29 / Renan + Codex
 
 ## Risks and Mitigations
