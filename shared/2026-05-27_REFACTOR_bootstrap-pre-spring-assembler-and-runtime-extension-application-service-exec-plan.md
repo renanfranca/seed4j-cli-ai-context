@@ -271,7 +271,7 @@ Execução desta rodada (TDD estrito autônomo):
 
 Validação final da rodada:
 
-- `./mvnw clean verify`: verde (na segunda execução; primeira execução falhou de forma transitória com `ClassNotFoundException` do surefire para `RuntimeExtensionApplicationServiceTest` após `clean`, sem reproduzir no rerun).
+- `./mvnw clean verify`: verde na execução final (observadas falhas intermitentes em execuções anteriores e não reproduzidas no último rerun completo).
 - `npm run prettier:check`: verde.
 - `seed4j --version`: exit code `0`; saída `Seed4J CLI v0.0.1-SNAPSHOT` e `Seed4J version: 1.34.0`.
 
