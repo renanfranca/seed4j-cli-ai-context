@@ -127,19 +127,19 @@ Confirmar que o refactor não alterou comportamento observável.
 
 #### Validation
 
-- [ ] Command: `./mvnw -Dtest=Seed4JCliAppTest,PreSpringBootstrapApplicationServiceTest,PreSpringBootstrapRunnerTest,CurrentProcessPreSpringRuntimeEnvironmentReaderTest,PreSpringBootstrapConfigurationTest,Seed4JCliLauncherFactoryTest,Seed4JCliLauncherTest test`
-- [ ] Expected result: testes focados verdes.
-- [ ] Command: `./mvnw clean verify`
-- [ ] Expected result: validação completa verde.
-- [ ] Command: `npm run prettier:check`
-- [ ] Expected result: sem divergências.
-- [ ] Command: `seed4j --version`
-- [ ] Expected result: comando executa com exit code `0` e saída de versão compatível.
+- [x] Command: `./mvnw -Dtest=Seed4JCliAppTest,PreSpringBootstrapApplicationServiceTest,PreSpringBootstrapRunnerTest,CurrentProcessPreSpringRuntimeEnvironmentReaderTest,PreSpringBootstrapConfigurationTest,Seed4JCliLauncherFactoryTest,Seed4JCliLauncherTest test`
+- [x] Expected result: testes focados verdes.
+- [x] Command: `./mvnw clean verify`
+- [x] Expected result: validação completa verde.
+- [x] Command: `npm run prettier:check`
+- [x] Expected result: sem divergências.
+- [x] Command: `seed4j --version`
+- [x] Expected result: comando executa com exit code `0` e saída de versão compatível.
 
 #### Acceptance Criteria
 
-- [ ] `seed4j --version` mantém comportamento.
-- [ ] Full verification passa sem regressão.
+- [x] `seed4j --version` mantém comportamento.
+- [x] Full verification passa sem regressão.
 
 ## Progress
 
@@ -150,8 +150,8 @@ Confirmar que o refactor não alterou comportamento observável.
 - [x] Milestone 2 completed
 - [x] Milestone 3 started
 - [x] Milestone 3 completed
-- [ ] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 4 started
+- [x] Milestone 4 completed
 
 ## Decisions
 
