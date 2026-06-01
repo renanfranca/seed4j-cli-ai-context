@@ -42,9 +42,9 @@ RuntimeMetadata lê o YAML como strings e RuntimeSelection expõe Optional<Strin
 RuntimeExtensionInstallRequest deve ficar assim conceitualmente:
 
 public record RuntimeExtensionInstallRequest(
-  RuntimeExtensionJarPath extensionJarPath,
-  RuntimeDistributionId distributionId,
-  RuntimeDistributionVersion distributionVersion
+RuntimeExtensionJarPath extensionJarPath,
+RuntimeDistributionId distributionId,
+RuntimeDistributionVersion distributionVersion
 ) {}
 
 RuntimeExtensionJarPath deve armazenar String path, validar Assert.notBlank("path", path), validar que Path.of(path) é possível no construtor, expor Path filePath(), e não ter método get().
@@ -121,8 +121,8 @@ Propagar os VOs pelo domínio de bootstrap sem mudar a experiência da CLI.
 #### Validation
 
 - [ ] Command: ./mvnw
-  -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionApplicationServiceTest,RuntimeExtensionApplicationConfigurationTest,RuntimeSelectionTest,Seed4JCliLauncherTest,SystemPropertyRuntimeSelectionProviderTest,
-  CurrentProcessRuntimeSelectionProviderTest,Seed4JCommandsFactoryTest test
+      -Dtest=RuntimeExtensionInstallerTest,RuntimeExtensionApplicationServiceTest,RuntimeExtensionApplicationConfigurationTest,RuntimeSelectionTest,Seed4JCliLauncherTest,SystemPropertyRuntimeSelectionProviderTest,
+      CurrentProcessRuntimeSelectionProviderTest,Seed4JCommandsFactoryTest test
 
 - [ ] Expected result: todos os testes focados compilam e passam.
 
