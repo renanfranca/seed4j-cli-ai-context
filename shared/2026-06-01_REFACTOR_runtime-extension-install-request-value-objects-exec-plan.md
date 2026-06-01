@@ -17,7 +17,7 @@ Safety boundary: This task is limited to authorized, defensive maintenance of th
 
 ## Definitions
 
-RuntimeExtensionJarPath: value object público que armazena o path textual informado na borda CLI e expõe filePath() para conversão em java.nio.file.Path.
+RuntimeExtensionJarPath: value object público que armazena java.nio.file.Path e expõe factory from(String) para transformar a entrada textual da borda CLI em tipo de domínio.
 
 RuntimeDistributionId: value object público para o identificador da distribuição da runtime extension.
 
@@ -27,13 +27,13 @@ RuntimeSelection: modelo público que descreve qual runtime está ativa quando a
 
 ## Existing Context
 
-RuntimeExtensionInstallRequest hoje recebe Path extensionJarPath, String distributionId e String distributionVersion.
+RuntimeExtensionInstallRequest agora recebe RuntimeExtensionJarPath, RuntimeDistributionId e RuntimeDistributionVersion.
 
-ExtensionInstallCommand recebe strings do picocli e hoje converte o jar para Path antes de construir o request.
+ExtensionInstallCommand recebe strings do picocli e constrói RuntimeExtensionJarPath via RuntimeExtensionJarPath.from(...).
 
-RuntimeExtensionInstaller valida o layout do jar chamando RuntimeExtensionJarLayoutValidator.validate(Path).
+RuntimeExtensionInstaller valida o layout do jar chamando RuntimeExtensionJarLayoutValidator.validate(request.extensionJarPath().path()).
 
-FileSystemRuntimeExtensionArtifactsRepository copia o jar e escreve metadata.yml com distribution.id e distribution.version.
+FileSystemRuntimeExtensionArtifactsRepository copia o jar a partir de request.extensionJarPath().path() e escreve metadata.yml com distribution.id e distribution.version.
 
 RuntimeMetadata lê o YAML como strings e RuntimeSelection expõe Optional<String> para id/version, usados por Seed4JCliLauncher, SystemPropertyRuntimeSelectionProvider e Seed4JCommandsFactory.
 
@@ -47,7 +47,7 @@ RuntimeDistributionId distributionId,
 RuntimeDistributionVersion distributionVersion
 ) {}
 
-RuntimeExtensionJarPath deve armazenar String path, validar Assert.notBlank("path", path), validar que Path.of(path) é possível no construtor, expor Path filePath(), e não ter método get().
+RuntimeExtensionJarPath deve armazenar Path path, validar Assert.notNull("path", path) e Assert.notBlank("path", path.toString()) no construtor canônico, expor factory RuntimeExtensionJarPath.from(String) com Assert.notBlank("path", path), e não ter método get().
 
 RuntimeDistributionId deve armazenar String id, validar Assert.notBlank("id", id), e não ter método get().
 
@@ -90,7 +90,7 @@ Adicionar os tipos de domínio públicos sem alterar ainda o comportamento exter
 - [ ] Criar src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeDistributionId.java.
 - [ ] Criar src/main/java/com/seed4j/cli/bootstrap/domain/RuntimeDistributionVersion.java.
 - [ ] Usar Assert.notBlank nos três VOs.
-- [ ] Em RuntimeExtensionJarPath, implementar filePath() retornando Path.of(path()).
+- [ ] Em RuntimeExtensionJarPath, implementar from(String) retornando RuntimeExtensionJarPath com Path.of(path).
 - [ ] Não criar método get() em nenhum dos novos VOs.
 
 #### Validation
@@ -100,7 +100,7 @@ Adicionar os tipos de domínio públicos sem alterar ainda o comportamento exter
 
 #### Acceptance Criteria
 
-- [ ] RuntimeExtensionJarPath.filePath() retorna o mesmo Path de Path.of(input).
+- [ ] RuntimeExtensionJarPath.from(input).path() retorna o mesmo Path de Path.of(input).
 - [ ] path, id e version blank/null falham por validação de domínio.
 
 ### Milestone 3 - Tipar Request, Metadata e Selection
@@ -112,8 +112,8 @@ Propagar os VOs pelo domínio de bootstrap sem mudar a experiência da CLI.
 #### Changes
 
 - [ ] Atualizar RuntimeExtensionInstallRequest para usar os três VOs.
-- [ ] Atualizar RuntimeExtensionInstaller para validar request.extensionJarPath().filePath().
-- [ ] Atualizar FileSystemRuntimeExtensionArtifactsRepository para copiar de request.extensionJarPath().filePath() e escrever YAML com request.distributionId().id() e request.distributionVersion().version().
+- [ ] Atualizar RuntimeExtensionInstaller para validar request.extensionJarPath().path().
+- [ ] Atualizar FileSystemRuntimeExtensionArtifactsRepository para copiar de request.extensionJarPath().path() e escrever YAML com request.distributionId().id() e request.distributionVersion().version().
 - [ ] Atualizar RuntimeMetadata para armazenar RuntimeDistributionId e RuntimeDistributionVersion.
 - [ ] Atualizar RuntimeSelection para expor Optional<RuntimeDistributionId> e Optional<RuntimeDistributionVersion>, mantendo Optional<Path> extensionJarPath.
 - [ ] Atualizar Seed4JCliLauncher, SystemPropertyRuntimeSelectionProvider e Seed4JCommandsFactory para converter VOs para string somente ao escrever system properties ou renderizar versão.
@@ -140,7 +140,7 @@ Fazer a borda CLI construir os VOs explicitamente e limpar os testes afetados.
 
 #### Changes
 
-- [ ] Atualizar ExtensionInstallCommand para construir new RuntimeExtensionJarPath(extensionJarPath), new RuntimeDistributionId(distributionId) e new RuntimeDistributionVersion(distributionVersion).
+- [ ] Atualizar ExtensionInstallCommand para construir RuntimeExtensionJarPath.from(extensionJarPath), new RuntimeDistributionId(distributionId) e new RuntimeDistributionVersion(distributionVersion).
 - [ ] Atualizar testes que constroem RuntimeExtensionInstallRequest diretamente para usar VOs.
 - [ ] Atualizar testes de RuntimeSelection para comparar .id() e .version() ou comparar os VOs explicitamente.
 - [ ] Usar helpers de teste apenas quando houver reutilização clara; evitar helpers de uma linha com um único call site.
@@ -183,19 +183,19 @@ Confirmar que a refatoração não introduziu regressões de compilação, forma
 
 - [x] Milestone 1 started
 - [x] Milestone 1 completed
-- [ ] Milestone 2 started
-- [ ] Milestone 2 completed
-- [ ] Milestone 3 started
-- [ ] Milestone 3 completed
-- [ ] Milestone 4 started
-- [ ] Milestone 4 completed
+- [x] Milestone 2 started
+- [x] Milestone 2 completed
+- [x] Milestone 3 started
+- [x] Milestone 3 completed
+- [x] Milestone 4 started
+- [x] Milestone 4 completed
 - [ ] Milestone 5 started
 - [ ] Milestone 5 completed
 
 ## Decisions
 
-- Decision: RuntimeExtensionJarPath armazena String, não Path.
-  Rationale: o valor nasce na borda CLI como texto e a conversão para filesystem deve ser explícita via filePath().
+- Decision: RuntimeExtensionJarPath armazena Path e expõe RuntimeExtensionJarPath.from(String).
+  Rationale: o request tipado precisa carregar um Path válido internamente, mas a borda CLI continua textual e deve converter por factory explícita com validação.
   Date/Author: 2026-06-01 / Codex + Renan
 
 - Decision: não criar método get() nos novos VOs.
@@ -208,6 +208,10 @@ Confirmar que a refatoração não introduziu regressões de compilação, forma
 
 - Decision: propagar RuntimeDistributionId e RuntimeDistributionVersion para RuntimeMetadata e RuntimeSelection.
   Rationale: evita voltar para primitivos logo após ler metadata e mantém os conceitos de distribuição tipados no domínio.
+  Date/Author: 2026-06-01 / Codex + Renan
+
+- Decision: manter o construtor canônico público do record e reforçar uso de from(String) via call sites.
+  Rationale: Java mantém o construtor canônico de record público; a regra "não usar new direto" será aplicada por busca e revisão nos consumidores.
   Date/Author: 2026-06-01 / Codex + Renan
 
 ## Risks and Mitigations
@@ -238,5 +242,7 @@ A mudança é refatoração interna sem migração de arquivo de configuração.
 Seed4JProjectFolder em seed4j/module é a referência mais próxima para armazenar string e expor Path por método de domínio.
 
 RuntimeExtensionInstallRequest é público e usado fora de bootstrap.domain; por isso seus novos tipos também precisam ser públicos.
+
+Como RuntimeExtensionJarPath é record público, o construtor canônico continua público; o alinhamento com o factory depende de disciplina em call sites e testes.
 
 RuntimeSelection tem dois papéis diferentes: jar path operacional de filesystem e metadata de distribuição. Só a metadata precisa ser propagada como VO nesta refatoração.
