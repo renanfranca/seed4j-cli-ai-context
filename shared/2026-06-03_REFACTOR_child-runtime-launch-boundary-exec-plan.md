@@ -200,3 +200,4 @@ This is an internal refactor with no intended CLI behavior change. If launch beh
 - `./mvnw test` passed with 493 tests, 0 failures, 0 errors, 0 skipped.
 - `npm run prettier:check` passed after formatting `ExtensionRuntimeBootstrapInProcessTest.java` and `Seed4JCliLauncherTest.java`.
 - Follow-up cleanup removed unused `Seed4JCliHome cliHome` from `Seed4JCliLauncher`; `./mvnw -Dtest=Seed4JCliLauncherTest,Seed4JCliLauncherFactoryTest,ExtensionRuntimeBootstrapInProcessTest test` and `npm run prettier:check` passed.
+- Follow-up cleanup removed `Seed4JCliLauncherFactory` and its `LauncherDependencies` record after composition already constructed `Seed4JCliLauncher` directly; `./mvnw -Dtest=Seed4JCliLauncherConstructionTest,Seed4JCliLauncherTest,PreSpringBootstrapConfigurationTest,PreSpringBootstrapApplicationServiceTest,PreSpringBootstrapRunnerTest,Seed4JCliAppTest test`, `npm run prettier:check`, and `git diff --check` passed.
