@@ -199,3 +199,4 @@ This is an internal refactor with no intended CLI behavior change. If launch beh
 - `./mvnw -Dtest=HexagonalArchTest,PreSpringBootstrapConfigurationTest,PreSpringBootstrapApplicationServiceTest,Seed4JCliAppTest test` passed after recomposing `JavaProcessChildLauncher` with secondary launch translators.
 - `./mvnw test` passed with 493 tests, 0 failures, 0 errors, 0 skipped.
 - `npm run prettier:check` passed after formatting `ExtensionRuntimeBootstrapInProcessTest.java` and `Seed4JCliLauncherTest.java`.
+- Follow-up cleanup removed unused `Seed4JCliHome cliHome` from `Seed4JCliLauncher`; `./mvnw -Dtest=Seed4JCliLauncherTest,Seed4JCliLauncherFactoryTest,ExtensionRuntimeBootstrapInProcessTest test` and `npm run prettier:check` passed.
