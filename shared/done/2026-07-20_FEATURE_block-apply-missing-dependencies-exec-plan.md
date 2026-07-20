@@ -160,6 +160,33 @@ Document the new CLI contract and complete agent-side validation.
 - [x] Both documentation files describe the exact contract and examples.
 - [x] Focused and full agent-side test suites pass.
 
+### Milestone 5 - Validate the packaged JAR
+
+#### Goal
+
+Prove the issue #200 contract through the rebuilt fat JAR rather than Maven's test classpath.
+
+#### Changes
+
+- [x] Rebuild `target/seed4j-cli-0.0.4-SNAPSHOT.jar` with the current sources.
+- [x] Exercise all issue scenarios with isolated temporary homes and projects.
+- [x] Run the two packaged-JAR extension bootstrap smokes.
+
+#### Validation
+
+- [x] Command: `./mvnw -DskipTests package`
+- [x] Expected result: build succeeds and Spring Boot replaces the main artifact with the repackaged archive.
+- [x] Command shape: `java -Duser.home=<temporary-home> -jar target/seed4j-cli-0.0.4-SNAPSHOT.jar ...`
+- [x] Expected result: blocked direct, transitive, feature, and required-option-precedence scenarios return 2 on stderr with no project-file, Seed4J-history, HEAD, or Git-log changes; `init`, the dependency-satisfied path, and `--plan` return 0.
+- [x] Command: `./mvnw -Dtest=ExtensionRuntimeBootstrapApplyPackagedJarSmokeIT,ExtensionRuntimeBootstrapListPackagedJarSmokeIT test`
+- [x] Expected result: 2 tests pass with no failures, errors, or skips.
+
+#### Acceptance Criteria
+
+- [x] The packaged CLI matches the documented dependency-blocking contract.
+- [x] Feature candidates and transitive dependencies retain deterministic ordering.
+- [x] No versioned repository file is changed by validation.
+
 ## Progress
 
 - [x] Milestone 1 started
@@ -170,6 +197,8 @@ Document the new CLI contract and complete agent-side validation.
 - [x] Milestone 3 completed
 - [x] Milestone 4 started
 - [x] Milestone 4 completed
+- [x] Milestone 5 started
+- [x] Milestone 5 completed
 
 ## Decisions
 
@@ -227,3 +256,6 @@ Release through the normal CLI release process; no migration or feature flag is 
 - Existing `shouldApplyInitModule...` and `shouldPlan...` integration behaviors already cover the no-dependency and read-only plan compatibility paths; both remained green throughout the new preflight work.
 - `./mvnw test` passed all 489 tests. Maven still emits the repository's known dependency-convergence warnings, but they are non-failing under the current Enforcer configuration.
 - `npm run prettier:check` reports unrelated existing drift in the completed npm-publish ExecPlan, `JavaProcessChildLauncher.java`, `BashCompletionScriptGenerator.java`, `Seed4JCommandsFactory.java`, `RuntimeExtensionCommonSourceNodePackagesVersionsReader.java`, `JavaRuntimeExtensionInstallerTest.java`, `ExtensionRuntimeCommandsTest.java`, and `HexagonalArchTest.java`. All files touched by this issue pass Prettier directly.
+- The rebuilt fat JAR passed every issue #200 manual scenario. File-content snapshots outside `.git`, the Seed4J history contained in those snapshots, Git HEAD, and Git log were byte-for-byte unchanged around every blocked command and around `optional-typescript --plan`.
+- The packaged feature diagnostic omitted the satisfied `java-build-tool` feature and rendered `jacoco, jacoco-with-min-coverage-check` alphabetically. After applying `jacoco`, `sonarqube-java-backend` returned zero and created its normal Seed4J commit.
+- Both extension bootstrap packaged-JAR smokes passed after the rebuild (2 tests, 0 failures, 0 errors, 0 skipped).
