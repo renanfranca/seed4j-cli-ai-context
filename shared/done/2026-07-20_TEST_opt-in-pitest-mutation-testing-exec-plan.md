@@ -76,9 +76,9 @@ Prove that the integration works with the real suite and record the initial resu
 
 #### Changes
 
-- [ ] Run full mutation coverage and record duration, mutant count, and score here.
-- [ ] Run the normal unit test suite and formatting check.
-- [ ] Inspect the effective default lifecycle/profile state to confirm PIT remains opt-in.
+- [x] Run full mutation coverage and record duration, mutant count, and score here.
+- [x] Run the normal unit test suite and formatting check.
+- [x] Inspect the effective default lifecycle/profile state to confirm PIT remains opt-in.
 
 #### Validation
 
@@ -100,7 +100,7 @@ Prove that the integration works with the real suite and record the initial resu
 - [x] Milestone 2 started.
 - [x] Milestone 2 completed.
 - [x] Milestone 3 started.
-- [ ] Milestone 3 completed.
+- [x] Milestone 3 completed.
 
 ## Decisions
 
@@ -141,3 +141,5 @@ No deployment or data migration is involved. The profile becomes available when 
 - Maven Central must be checked at implementation time because the requested fixed versions are time-sensitive.
 - Before the profile existed, the diagnostic command selected PIT 1.25.8 dynamically, warned that `pitest-junit5-plugin` was missing, sent 294 test classes to the minion, and failed with zero runnable tests. This is the expected RED evidence for the profile's JUnit integration behavior.
 - With the profile enabled, dry-run discovery succeeded with JUnit Platform 6.0.3: PIT examined 277 tests, generated 1,025 mutations, measured 2,212/2,249 covered lines (98%), and reported zero uncovered mutations. Dry-run mode intentionally ran zero tests against mutants.
+- The full mutation baseline completed successfully in 21 minutes and 46 seconds. PIT examined 277 tests, generated 1,025 mutations, killed 861 (84%), reported 8 without coverage, measured 85% test strength, and ran 3,913 tests against mutants.
+- The normal Maven suite passed all 484 tests in 22.186 seconds. The changed POM, README, and ExecPlan pass Prettier; the repository-wide Prettier check still reports eight unrelated, pre-existing files.
