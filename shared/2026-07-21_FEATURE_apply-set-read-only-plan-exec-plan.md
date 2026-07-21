@@ -10,13 +10,13 @@ This work is limited to authorized feature maintenance in this repository. The p
 
 ## Scope
 
-In scope: register `apply-set`; require one or more positional visible module slugs and `--plan`; accept `--project-path` with default `.`; expose the union of visible module property options without `--commit`; preserve Picocli typing when global property definitions agree and use neutral text capture when their types conflict; reject unknown, hidden, or duplicate requested slugs; calculate execution order exclusively with `Seed4JLandscape.sort(...)`; recursively validate module and feature dependencies against project history and explicitly requested earlier modules; reconcile selected property definitions; resolve values with explicit CLI input over project history over default; reject known options irrelevant to the selected set; aggregate predictable problems; render the complete plan; document the command and architecture; and prove read-only behavior.
+In scope: register `apply-set`; require one or more positional visible module slugs and `--plan`; accept `--project-path` with default `.`; expose the union of visible module property options without `--commit`; trust the Seed4J business invariant that one property key has one type across modules and preserve that type through Picocli; reject unknown, hidden, or duplicate requested slugs; calculate execution order exclusively with `Seed4JLandscape.sort(...)`; recursively validate module and feature dependencies against project history and explicitly requested earlier modules; reconcile selected property definitions; resolve values with explicit CLI input over project history over default; reject known options irrelevant to the selected set; aggregate predictable problems; render the complete plan; document the command and architecture; and prove read-only behavior.
 
 Out of scope: module application, `--commit`, Git initialization, commits, rollback, partial failure recovery, presets, JSON or other structured formats, provider auto-selection, and any behavior change to the existing single-module `apply` command.
 
 ## Definitions
 
-`Requested modules` are the visible module slugs supplied by the caller, retained in caller order even when already present in history. `Execution order` is the requested set reordered only by `Seed4JLandscape.sort(...)`. A `module dependency` names one exact prerequisite module. A `feature dependency` names a capability that may have multiple provider modules; a provider must be explicitly requested or already present in history. `Visible module` means a resource returned by the existing visible catalog exposed by `Seed4JModulesApplicationService.resources()`; hidden resources are neither requestable nor suggested. `History` means prior project actions and their latest parameters read through `ProjectsApplicationService`. `Reconciled property` is one property key shared by one or more selected modules after type, mandatory status, default, and description rules have been combined. A `valid reusable plan` is an immutable domain result whose execution order and validations need not be recalculated by a future mutable issue.
+`Requested modules` are the visible module slugs supplied by the caller, retained in caller order even when already present in history. `Execution order` is the requested set reordered only by `Seed4JLandscape.sort(...)`. A `module dependency` names one exact prerequisite module. A `feature dependency` names a capability that may have multiple provider modules; a provider must be explicitly requested or already present in history. `Visible module` means a resource returned by the existing visible catalog exposed by `Seed4JModulesApplicationService.resources()`; hidden resources are neither requestable nor suggested. `History` means prior project actions and their latest parameters read through `ProjectsApplicationService`. `Property type invariant` means that the same property key represents the same Seed4J type in every module; like the Seed4J Vue application, the CLI trusts this business convention rather than validating it. `Reconciled property` is one property key shared by one or more selected modules after mandatory status, default, and description rules have been combined. A `valid reusable plan` is an immutable domain result whose execution order and validations need not be recalculated by a future mutable issue.
 
 ## Existing Context
 
@@ -91,8 +91,8 @@ Represent shared selected properties once, preserve deterministic display order,
 
 #### Changes
 
-- Extend the module-set domain model and application service with property reconciliation by key: equal types; mandatory if any definition is mandatory; at most one distinct default and description; first occurrence order from execution order and module declaration order.
-- Preserve explicit CLI value types for globally consistent definitions; convert neutral text values against the reconciled selected type only after parsing; report incompatible selected definitions without allowing Picocli to reject unrelated combinations prematurely.
+- Extend the module-set domain model and application service with property reconciliation by key: trust the shared type declared by the first definition; mandatory if any definition is mandatory; at most one distinct default and description; first occurrence order from execution order and module declaration order.
+- Preserve explicit CLI value types produced by Picocli. Do not add a neutral text type, late conversion, or type-conflict validation; the same-key/same-type rule is a Seed4J business invariant shared with the Vue application.
 - Track which known property options were explicitly supplied and invalidate options unused by selected modules.
 - Extend the primary renderer to show resolved source, missing parameters, dependency problems, semantic conflicts, irrelevant options, final status, and the read-only footer.
 - Add focused behavior cycles to the existing application and CLI integration suites.
@@ -100,12 +100,12 @@ Represent shared selected properties once, preserve deterministic display order,
 #### Validation
 
 - Command: `./mvnw -Dtest=ModuleSetPlanningApplicationServiceTest,Seed4JCommandsFactoryTest test`
-- Expected result: unions and shared properties render once; CLI overrides history which overrides default; optional defaults remain informational; all missing mandatory values and all other predictable problems appear; incompatible definitions and irrelevant explicit options return 2.
+- Expected result: unions and shared properties render once; CLI overrides history which overrides default; optional defaults remain informational; all missing mandatory values and all other predictable problems appear; conflicting defaults or descriptions and irrelevant explicit options return 2.
 
 #### Acceptance Criteria
 
-- Global property definitions with one type retain Picocli's current type and completion metadata.
-- Globally conflicting types parse as text, while only an actually incompatible selected set is rejected by planning.
+- Global property definitions retain Picocli's current type and completion metadata from their first occurrence.
+- The planner does not validate the business invariant that repeated property keys have the same type.
 - The plan aggregates rather than short-circuits predictable post-resolution problems.
 
 ### Milestone 4 - Prove read-only behavior and compatibility
@@ -155,6 +155,34 @@ Document user-visible semantics and the new hexagonal flow, format all supported
 - Documentation clearly distinguishes invalid multi-module plan exit code 2 from single-module plan's informational exit code 0.
 - Agent-side formatting and test gates pass without running `clean verify` automatically.
 
+### Milestone 6 - Close coverage with observable contracts and remove unsupported type reconciliation
+
+#### Goal
+
+Close the apply-set coverage gaps through CLI and planning behaviors, remove dead renderer paths, and align property typing with the Seed4J Vue precedent without changing the core repository.
+
+#### Changes
+
+- Add behavior cases for duplicate-only requests, missing catalog dependencies, and requested feature providers ordered after their consumers.
+- Add CLI behavior for boolean Picocli values and conflicting default/description diagnostics using simple in-memory catalog collaborators.
+- Remove `TEXT`, late explicit-value conversion, invalid-value planning problems, and selected type-conflict validation.
+- Replace the renderer's unreachable problem-label switch arms with the exact set of problems rendered in the general validation section.
+- Update README, command documentation, and this ExecPlan to state the property type invariant explicitly.
+
+#### Validation
+
+- Command: `./mvnw -Dtest=ModuleSetPlanningApplicationServiceTest,Seed4JCommandsFactoryTest test`
+- Command: `npm run prettier:format`
+- Command: `npm run prettier:check`
+- Command: `./mvnw test`
+- Expected result: behavior suites pass and the unit JaCoCo report shows zero missed lines and branches for `ModuleSetPlanner`, `ApplyModuleSetPlanRenderer`, and `ModulePropertyOptionSpecFactory`.
+
+#### Acceptance Criteria
+
+- Picocli remains the only CLI string-to-typed-value converter for globally registered module properties.
+- Default and description conflicts remain invalid; repeated-key type consistency is trusted rather than checked.
+- No coverage-only test directly exercises an internal mapper, converter, or renderer helper.
+
 ## Progress
 
 - [x] Issue #296 and parent issue #295 inspected on 2026-07-21.
@@ -170,6 +198,8 @@ Document user-visible semantics and the new hexagonal flow, format all supported
 - [x] Milestone 4 completed.
 - [x] Milestone 5 started.
 - [x] Milestone 5 completed.
+- [x] Milestone 6 started.
+- [x] Milestone 6 completed.
 
 ## Decisions
 
@@ -200,11 +230,14 @@ Document user-visible semantics and the new hexagonal flow, format all supported
 - Decision: Wire external Seed4J and project application services through `command.composition` into technical secondary readers.
   Rationale: Secondary adapters must implement domain ports without depending directly on another context's application layer, and primary adapters must not construct secondary adapters. The explicit composition root supplies method references while the secondary adapters retain all translation logic.
   Date/Author: 2026-07-21 / Codex
+- Decision: Treat same-key/same-type consistency as a Seed4J business invariant rather than a runtime validation owned by the CLI.
+  Rationale: The Seed4J Vue application deduplicates selected definitions by key and trusts their type while its primary adapter casts user input. The CLI will follow the same model: Picocli casts input, while the planner continues to reconcile mandatory status, defaults, and descriptions only.
+  Date/Author: 2026-07-21 / Codex
 
 ## Risks and Mitigations
 
-- Risk: Picocli normally rejects duplicate option names with incompatible types at command construction time.
-  Mitigation: Build one global option definition per property key; retain the existing type only if every visible definition agrees, otherwise capture text and perform selected-set conversion/compatibility validation in planning.
+- Risk: A custom extension could violate the same-key/same-type business invariant.
+  Mitigation: Match the existing Seed4J Vue behavior and document that such a catalog is outside the supported contract; use the first visible definition to register the single global Picocli option.
 - Risk: Reading history for a nonexistent target could cause the external repository to create storage or fail before a plan can be rendered.
   Mitigation: Characterize `ProjectsApplicationService.getHistory` through a focused public-path test; if it mutates or rejects missing paths, keep existence/layout handling inside the secondary history adapter and return empty domain history without writing.
 - Risk: Reusing core types in the new application service would invert the required hexagonal boundary.
@@ -228,12 +261,14 @@ The feature is additive and read-only, so rollout consists of shipping the new c
 
 - Seed4J core 2.2.0 already exposes the required ordering authority as `Seed4JLandscape.sort(Collection<Seed4JModuleSlug>)`; its result can be translated into a CLI-owned ordered requested set.
 - The current single-module command combines primary parsing, external service reads, dependency discovery, rendering, and mutation. The new flow is an opportunity to introduce the requested boundary without destabilizing the existing command.
-- The public issue body is less specific than the refined implementation prompt about duplicate rejection, invalid-plan exit code 2, global property type conflicts, irrelevant known options, requiring-module attribution, and nonexistent paths; this ExecPlan treats the refined prompt as the controlling acceptance contract.
-- Picocli command construction can preserve a single option per global key by exposing a neutral `TEXT` domain type when visible definitions disagree; selected-set reconciliation will later decide whether the actual request is incompatible.
+- The public issue body is less specific than the refined implementation prompt about duplicate rejection, invalid-plan exit code 2, irrelevant known options, requiring-module attribution, and nonexistent paths; this ExecPlan treats the refined prompt as the controlling acceptance contract. The initially proposed global type-conflict handling was later superseded by the documented same-key/same-type Seed4J invariant.
+- Seed4J's Vue application deduplicates selected properties by key and uses the retained definition type to cast form values; it does not validate type conflicts across modules. The CLI now follows that same business convention while retaining stricter default and description reconciliation required by issue #296.
 - `ProjectsApplicationService.getHistory` returns an empty history for both an existing empty directory and a nonexistent project path without creating directories, `.seed4j`, or `.git`; integration tests now lock down that read-only behavior.
 - Picocli's programmatic variadic positional did not reject an absent list before invoking `Callable`; the command therefore performs an explicit empty-list usage check and returns code 2 instead of leaking a null dereference.
 - The architecture test prohibits secondary adapters from depending on any application package, including Seed4J core contexts, and prohibits primary adapters from constructing secondary adapters. An explicit `command.composition` root resolves both directions while keeping the new command dependent only on its application service.
 - Full-repository Prettier initially identified seven pre-existing Java files that differed from the installed formatter. The requested `npm run prettier:format` normalized those files mechanically, after which `npm run prettier:check` passed.
+- The remaining apply-set coverage gaps represented observable edge cases (duplicate-only requests, missing catalog modules, late feature providers, typed Picocli input, and rendered property conflicts) plus dead type-conversion and renderer-label paths. Behavior tests now cover the former, while trusting the Seed4J type invariant removed the latter instead of preserving code solely for coverage.
+- During mutation-assisted RED checks, the system clock moved backwards and Maven briefly reused a future-dated mutated class from `target`. A focused `clean test` removed that generated artifact; source files were not reverted or overwritten.
 
 ## Validation Results
 
@@ -242,5 +277,7 @@ The feature is additive and read-only, so rollout consists of shipping the new c
 - `npm run prettier:check`: passed with `All matched files use Prettier code style!`.
 - `git diff --check`: passed with no whitespace errors.
 - `./mvnw test -q` inside the filesystem sandbox: application assertions passed, but 8 unrelated Mockito-based tests errored because Byte Buddy could not self-attach on Java 25.
-- `./mvnw test -q` outside that sandbox with the required attach permission after the final domain refactor: passed, exit code 0, covering 514 tests.
+- `./mvnw -q clean -Dtest=ModuleSetPlanningApplicationServiceTest,Seed4JCommandsFactoryTest test`: passed after all Milestone 6 RED-GREEN-REFACTOR cycles.
+- `./mvnw clean test -q` outside that sandbox with the required attach permission after the final coverage refactor: passed, exit code 0; the same suite contains 519 tests.
+- Fresh `target/site/jacoco/jacoco.csv` generated by that clean run: `ModuleSetPlanner`, `ApplyModuleSetPlanRenderer`, and `ModulePropertyOptionSpecFactory` each report 0 missed instructions, branches, lines, methods, and classes.
 - `./mvnw clean verify`: intentionally not run; the user must run this final local gate and report the exit code plus any relevant failure summary.
