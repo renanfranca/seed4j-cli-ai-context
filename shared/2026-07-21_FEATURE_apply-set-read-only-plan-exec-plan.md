@@ -183,6 +183,37 @@ Close the apply-set coverage gaps through CLI and planning behaviors, remove dea
 - Default and description conflicts remain invalid; repeated-key type consistency is trusted rather than checked.
 - No coverage-only test directly exercises an internal mapper, converter, or renderer helper.
 
+### Milestone 7 - Replace command composition with Spring-managed secondary adapters
+
+#### Goal
+
+Remove the artificial `command.composition` wiring while preserving the domain ports and every observable `apply-set` behavior. Spring is already available in the command runtime, so the secondary adapters should be ordinary Spring components that integrate the external Seed4J application APIs directly.
+
+#### Changes
+
+- Keep `ModuleSetCatalog` and `ModuleSetPlanningHistoryReader` as domain capability interfaces.
+- Make `Seed4JModuleSetCatalog` and `ProjectsModuleSetPlanningHistoryReader` Spring components with direct constructor injection of `Seed4JModulesApplicationService` and `ProjectsApplicationService`.
+- Remove `ModuleSetPlanningConfiguration` and the adapter-internal functional interfaces `Seed4JModulesResourcesReader`, `Seed4JLandscapeModuleSorter`, and `ProjectsHistoryReader`.
+- Update the CLI fixture to construct the same production adapter API used by Spring.
+- Refine `HexagonalArchTest` so secondary adapters cannot depend on their own context's application layer while integration with an external application API remains allowed.
+- Clarify in `AGENTS.md` and `documentation/hexagonal-architecture.md` that explicit composition packages are reserved for pre-Spring bootstrap work.
+
+#### Validation
+
+- Command: `./mvnw -Dtest=HexagonalArchTest,ModuleSetPlanningApplicationServiceTest,Seed4JCommandsFactoryTest test`
+- Command: `npm run prettier:format`
+- Command: `npm run prettier:check`
+- Command: `git diff --check`
+- Command: `./mvnw test`
+- Command: `./mvnw package -q`, followed by a valid `apply-set` invocation through the packaged JAR.
+- Expected result: architecture and behavior suites pass, the Spring context discovers both secondary adapters, and the packaged command returns 0 with `Status: VALID` without creating project state.
+
+#### Acceptance Criteria
+
+- No `command.composition` package or adapter-internal method-reference interfaces remain.
+- Application and domain still depend only on `ModuleSetCatalog` and `ModuleSetPlanningHistoryReader`.
+- CLI output, exit codes, dependency ordering, parameter resolution, and read-only guarantees remain unchanged.
+
 ## Progress
 
 - [x] Issue #296 and parent issue #295 inspected on 2026-07-21.
@@ -200,6 +231,8 @@ Close the apply-set coverage gaps through CLI and planning behaviors, remove dea
 - [x] Milestone 5 completed.
 - [x] Milestone 6 started.
 - [x] Milestone 6 completed.
+- [x] Milestone 7 started.
+- [x] Milestone 7 completed.
 
 ## Decisions
 
@@ -230,6 +263,9 @@ Close the apply-set coverage gaps through CLI and planning behaviors, remove dea
 - Decision: Wire external Seed4J and project application services through `command.composition` into technical secondary readers.
   Rationale: Secondary adapters must implement domain ports without depending directly on another context's application layer, and primary adapters must not construct secondary adapters. The explicit composition root supplies method references while the secondary adapters retain all translation logic.
   Date/Author: 2026-07-21 / Codex
+- Decision: Supersede the preceding `command.composition` decision and use Spring-managed secondary adapters that inject the external Seed4J application APIs directly.
+  Rationale: Spring is available in the command runtime, the three functional interfaces only relocate the same coupling, and composition packages in this repository are reserved for the pre-Spring bootstrap boundary. The architecture rule should forbid a secondary adapter from depending on its own application layer without blocking an adapter from integrating an external application API.
+  Date/Author: 2026-07-21 / Codex
 - Decision: Treat same-key/same-type consistency as a Seed4J business invariant rather than a runtime validation owned by the CLI.
   Rationale: The Seed4J Vue application deduplicates selected definitions by key and trusts their type while its primary adapter casts user input. The CLI will follow the same model: Picocli casts input, while the planner continues to reconcile mandatory status, defaults, and descriptions only.
   Date/Author: 2026-07-21 / Codex
@@ -241,11 +277,13 @@ Close the apply-set coverage gaps through CLI and planning behaviors, remove dea
 - Risk: Reading history for a nonexistent target could cause the external repository to create storage or fail before a plan can be rendered.
   Mitigation: Characterize `ProjectsApplicationService.getHistory` through a focused public-path test; if it mutates or rejects missing paths, keep existence/layout handling inside the secondary history adapter and return empty domain history without writing.
 - Risk: Reusing core types in the new application service would invert the required hexagonal boundary.
-  Mitigation: Keep core imports inside secondary translation adapters, their technical readers, and the explicit composition root; application and domain compile only against CLI-owned immutable types and capability interfaces.
+  Mitigation: Keep core imports inside Spring-managed secondary translation adapters; application and domain compile only against CLI-owned immutable types and capability interfaces.
 - Risk: Broad integration tests could become slow and obscure small TDD failures.
   Mitigation: Specify domain/application behaviors through the stable application-service API and run the CLI public path at least every two cycles, with the complete existing root suite as the compatibility checkpoint.
 - Risk: Existing untracked `_temporary/` content belongs to the user.
   Mitigation: Add and update only the explicitly requested ExecPlan file; do not delete, stage, or rewrite unrelated temporary content.
+- Risk: Broadening the architecture rule could accidentally allow a secondary adapter to call its own application service.
+  Mitigation: Scope the rule per business context and retain the existing cross-context rules; only external application APIs remain valid secondary dependencies.
 
 ## Validation Strategy
 
@@ -269,9 +307,17 @@ The feature is additive and read-only, so rollout consists of shipping the new c
 - Full-repository Prettier initially identified seven pre-existing Java files that differed from the installed formatter. The requested `npm run prettier:format` normalized those files mechanically, after which `npm run prettier:check` passed.
 - The remaining apply-set coverage gaps represented observable edge cases (duplicate-only requests, missing catalog modules, late feature providers, typed Picocli input, and rendered property conflicts) plus dead type-conversion and renderer-label paths. Behavior tests now cover the former, while trusting the Seed4J type invariant removed the latter instead of preserving code solely for coverage.
 - During mutation-assisted RED checks, the system clock moved backwards and Maven briefly reused a future-dated mutated class from `target`. A focused `clean test` removed that generated artifact; source files were not reverted or overwritten.
+- The broad secondary-to-application architecture rule conflated calls into a secondary adapter's own application layer with integration through an external context's public application API. Scoping the rule by bounded context preserves the inward dependency restriction while allowing a secondary adapter to implement its port through an external service.
 
 ## Validation Results
 
+- `./mvnw -q -Dtest=HexagonalArchTest,ModuleSetPlanningApplicationServiceTest,Seed4JCommandsFactoryTest test`: first failed only because `command.composition.ModuleSetPlanningConfiguration` violated the new pre-Spring-only composition rule, then passed after the Spring-managed adapter refactor; 93 tests passed.
+- `npm run prettier:format`: passed after the Milestone 7 refactor.
+- `npm run prettier:check`: passed with `All matched files use Prettier code style!` after the Milestone 7 refactor.
+- `git diff --check`: passed with no whitespace errors after the Milestone 7 refactor.
+- `./mvnw test -q`: passed after the Milestone 7 refactor.
+- `./mvnw package -q`: passed and produced `target/seed4j-cli-0.0.4-SNAPSHOT.jar`.
+- Packaged JAR checkpoint: `java -jar target/seed4j-cli-0.0.4-SNAPSHOT.jar apply-set init --project-path /tmp/seed4j-cli-m7-C2gpos/nonexistent-project --project-name 'Sample application' --base-name sampleApplication --node-package-manager npm --plan` returned 0, rendered `Status: VALID` and `No changes were applied.`, and left the project path nonexistent.
 - `./mvnw -Dtest=ModuleSetPlanningApplicationServiceTest,Seed4JCommandsFactoryTest,HexagonalArchTest test -q`: passed after the final domain/composition refactor.
 - `npm run prettier:format`: passed; supported files were formatted.
 - `npm run prettier:check`: passed with `All matched files use Prettier code style!`.
