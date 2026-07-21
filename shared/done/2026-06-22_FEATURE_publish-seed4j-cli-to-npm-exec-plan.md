@@ -258,7 +258,6 @@ Keep release notes drafted on `main` and publish the matching GitHub Release onl
 
 Release by creating a `vX.Y.Z` tag. The release workflow derives `X.Y.Z`, sets npm and Maven versions, builds and tests the CLI, prepares the npm package, smoke-tests the packed tarball, publishes with provenance, publishes the matching GitHub Release from the draft, and uploads `target/seed4j-cli-X.Y.Z.jar`. If a release fails before npm publishing, fix the repository or npm Trusted Publisher settings and rerun the workflow for the tag. If npm succeeds but GitHub Release publication or asset upload fails, rerun the workflow after fixing the release automation or upload conflict. If a bad npm version is published, publish a corrected patch version and deprecate the bad version with an explanatory npm deprecation message.
 
-
 ## Lessons Learned
 
 - Validation update on 2026-06-23: `npm run test:npm-package`, `npm run prettier:check`, and `npm pack --json --dry-run` passed with package version `0.0.1`.
